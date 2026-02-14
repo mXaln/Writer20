@@ -130,13 +130,13 @@
   <source>Back</source>
   <target>Atrás</target>
 </trans-unit>
-<trans-unit id="sf1868dc19e3917bb">
-  <source>Spanish</source>
-  <target>Español</target>
-</trans-unit>
 <trans-unit id="sdef34fe08bb28b09">
   <source>Chinese (Simplified)</source>
   <target>Chino (Simplificado)</target>
+</trans-unit>
+<trans-unit id="sff8c72928a9b6646">
+  <source>Spanish (Latin America)</source>
+  <target>Español (Latinoamérica)</target>
 </trans-unit>
 </body>
 </file>

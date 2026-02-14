@@ -41,7 +41,7 @@
 'sdef34fe08bb28b09': `Chino (Simplificado)`,
 'sefcf950b3cc4fc3b': `Idioma`,
 'sf0e261e04eda82ff': `Apariencia`,
-'sf1868dc19e3917bb': `Español`,
 'sf7bdcea7c8207cb8': `Libro`,
+'sff8c72928a9b6646': `Español (Latinoamérica)`,
     };
   

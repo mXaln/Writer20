@@ -157,7 +157,7 @@ export class SettingsScreen extends LitElement {
     private getLocaleNames(locale: string) {
         const locales: Record<string, string> = {
             'en': msg('English'),
-            'es-419': msg('Spanish'),
+            'es-419': msg('Spanish (Latin America)'),
             'ru': msg('Russian'),
             'zh-Hans': msg('Chinese (Simplified)'),
         };

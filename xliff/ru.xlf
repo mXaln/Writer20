@@ -130,13 +130,13 @@
   <source>Are you sure you want to delete "<x id="0" equiv-text="${projectName}"/>"?</source>
   <target>Вы уверены, что хотите удалить "<x id="0" equiv-text="${projectName}"/>"</target>
 </trans-unit>
-<trans-unit id="sf1868dc19e3917bb">
-  <source>Spanish</source>
-  <target>Испанский</target>
-</trans-unit>
 <trans-unit id="sdef34fe08bb28b09">
   <source>Chinese (Simplified)</source>
   <target>Китайский (упрощённый)</target>
+</trans-unit>
+<trans-unit id="sff8c72928a9b6646">
+  <source>Spanish (Latin America)</source>
+  <target>Испанский (Латиноамериканский)</target>
 </trans-unit>
 </body>
 </file>

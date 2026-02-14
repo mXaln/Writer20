@@ -90,10 +90,6 @@
   <source>English</source>
   <target>英语</target>
 </trans-unit>
-<trans-unit id="sf1868dc19e3917bb">
-  <source>Spanish</source>
-  <target>西班牙语</target>
-</trans-unit>
 <trans-unit id="sa30c12014e955946">
   <source>Russian</source>
   <target>俄语</target>
@@ -137,6 +133,10 @@
 <trans-unit id="sc16e00a7a8b2fde2">
   <source>Back</source>
   <target>返回</target>
+</trans-unit>
+<trans-unit id="sff8c72928a9b6646">
+  <source>Spanish (Latin America)</source>
+  <target>西班牙语（拉丁美洲）</target>
 </trans-unit>
 </body>
 </file>
