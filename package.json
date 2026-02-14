@@ -23,7 +23,8 @@
     "archiver": "^7.0.1",
     "better-sqlite3": "^9.2.2",
     "electron-log": "^5.0.1",
-    "extract-zip": "^2.0.1"
+    "extract-zip": "^2.0.1",
+    "simple-git": "^3.30.0"
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.29.0",

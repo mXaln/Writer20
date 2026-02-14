@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import log from 'electron-log';
 import * as db from './database';
+import simpleGit from 'simple-git';
 
 export function setupIpcHandlers(): void {
   // Project handlers
@@ -51,6 +52,17 @@ export function setupIpcHandlers(): void {
       const manifestPath = path.join(superFilesPath, 'manifest.json');
       fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
       log.info(`Created manifest.json: ${manifestPath}`);
+
+      // Initialize git repository
+      try {
+        const git = simpleGit(superFilesPath);
+        await git.init();
+        await git.add('.');
+        await git.commit('Initial commit');
+        log.info(`Initialized git repository: ${superFilesPath}`);
+      } catch (gitError: any) {
+        log.error(`Git init error: ${gitError.message}`);
+      }
 
       return { success: true, data: project };
     } catch (error: any) {
@@ -346,14 +358,27 @@ export function setupIpcHandlers(): void {
 
   ipcMain.handle('file:write', async (_event, filePath: string, content: string) => {
     try {
-      // Only write if:
-      // 1. Content is non-empty, OR
-      // 2. File already exists (preserve existing content)
-      const fileExists = fs.existsSync(filePath);
+      // Extract project folder from file path
+      const projectFolder = path.dirname(path.dirname(filePath));
+      const fileName = path.basename(filePath);
+      const relativePath = path.join('contents', fileName);
       
-      if (content.trim() || fileExists) {
-        fs.writeFileSync(filePath, content, 'utf-8');
-        log.info(`Saved file: ${filePath}`);
+      const fileExistedBefore = fs.existsSync(filePath);
+      
+      // Write file regardless
+      fs.writeFileSync(filePath, content, 'utf-8');
+      log.info(`Saved file: ${filePath}`);
+      
+      // Commit changes to git if content is not empty or file didn't exist
+      if (content.trim() || !fileExistedBefore) {
+        try {
+          const git = simpleGit(projectFolder);
+          await git.add(relativePath);
+          await git.commit(`Update ${fileName}`);
+          log.info(`Committed: ${fileName}`);
+        } catch (gitError: any) {
+          log.error(`Git error: ${gitError.message}`);
+        }
       }
       return { success: true };
     } catch (error: any) {
