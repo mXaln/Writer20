@@ -32,6 +32,9 @@ export interface Translations {
     delete: string;
     exportProject: string;
     deleteConfirm: string;
+    language: string;
+    book: string;
+    resource: string;
   };
   workflow: {
     back: string;

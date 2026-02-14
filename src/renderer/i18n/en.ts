@@ -20,7 +20,7 @@ export const en: Translations = {
         cancel: 'Cancel',
         create: 'Create',
         namePlaceholder: 'Enter project name',
-        descriptionPlaceholder: 'Enter project description (optional)',
+        descriptionPlaceholder: 'Enter project description (optional)'
     },
     projectInfo: {
         title: 'Project Info',
@@ -30,6 +30,9 @@ export const en: Translations = {
         delete: 'Delete',
         exportProject: 'Export Project',
         deleteConfirm: 'Are you sure you want to delete',
+        language: 'Language',
+        book: 'Book',
+        resource: 'Resource',
     },
     workflow: {
         back: 'Back',

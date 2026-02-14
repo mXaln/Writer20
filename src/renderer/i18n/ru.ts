@@ -20,7 +20,7 @@ export const ru: Translations = {
         cancel: 'Отмена',
         create: 'Создать',
         namePlaceholder: 'Введите название проекта',
-        descriptionPlaceholder: 'Введите описание проекта (необязательно)',
+        descriptionPlaceholder: 'Введите описание проекта (необязательно)'
     },
     projectInfo: {
         title: 'Информация о проекте',
@@ -30,6 +30,9 @@ export const ru: Translations = {
         delete: 'Удалить',
         exportProject: 'Экспорт проекта',
         deleteConfirm: 'Вы уверены, что хотите удалить',
+        language: 'Язык',
+        book: 'Книга',
+        resource: 'Ресурс',
     },
     workflow: {
         back: 'Назад',

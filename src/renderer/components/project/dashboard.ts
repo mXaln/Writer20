@@ -325,22 +325,20 @@ export class DashboardScreen extends LitElement {
                         </div>
                         <div class="modal-body">
                             <div class="form-group">
-                                <label class="form-label">Language (e.g., en, ru, es)</label>
+                                <label class="form-label">${this.translations.projectInfo.language}</label>
                                 <input
                                         type="text"
                                         class="form-input"
-                                        placeholder="a-z0-9-"
                                         .value=${this.newLanguage}
                                         @input=${(e: Event) => this.newLanguage = (e.target as HTMLInputElement).value.toLowerCase()}
                                         @keydown=${(e: KeyboardEvent) => e.key === 'Enter' && this.createProject()}
                                 />
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Book (exactly 3 chars)</label>
+                                <label class="form-label">${this.translations.projectInfo.book}</label>
                                 <input
                                         type="text"
                                         class="form-input"
-                                        placeholder="a-z0-9 (3 chars)"
                                         maxlength="3"
                                         .value=${this.newBook}
                                         @input=${(e: Event) => this.newBook = (e.target as HTMLInputElement).value.toLowerCase()}
@@ -348,7 +346,7 @@ export class DashboardScreen extends LitElement {
                                 />
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Resource</label>
+                                <label class="form-label">${this.translations.projectInfo.resource}</label>
                                 <select
                                         class="form-input"
                                         .value=${this.newType}
@@ -385,15 +383,15 @@ export class DashboardScreen extends LitElement {
                         </div>
                         <div class="modal-body">
                             <div class="info-row">
-                                <span class="info-label">language:</span>
+                                <span class="info-label">${this.translations.projectInfo.language}:</span>
                                 <span class="info-value">${this.selectedProject.language}</span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label">book:</span>
+                                <span class="info-label">${this.translations.projectInfo.book}:</span>
                                 <span class="info-value">${this.selectedProject.book}</span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label">resource:</span>
+                                <span class="info-label">${this.translations.projectInfo.resource}:</span>
                                 <span class="info-value">${this.selectedProject.type.toUpperCase()}</span>
                             </div>
                         </div>
