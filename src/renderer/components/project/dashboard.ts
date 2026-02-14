@@ -404,9 +404,6 @@ export class DashboardScreen extends LitElement {
                             <button class="secondary" @click=${this.exportProject}>
                                 ${this.translations.projectInfo.exportProject}
                             </button>
-                            <button class="primary" @click=${this.closeInfoModal}>
-                                ${this.translations.projectInfo.close}
-                            </button>
                         </div>
                     </div>
                 </div>
