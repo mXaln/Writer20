@@ -167,68 +167,111 @@ export function setupIpcHandlers(): void {
       }
 
       const zipPath = result.filePaths[0];
-      const fileName = path.basename(zipPath, '.zip');
       
-      // Parse filename to extract language/book/type
-      // Expected format: language_book_text_type or language_book_type
-      const parts = fileName.split('_');
-      let language = fileName;
-      let book = 'mat';
-      let type = 'ulb';
-      
-      if (parts.length >= 1) language = parts[0];
-      if (parts.length >= 2) book = parts[1];
-      if (parts.length >= 4) type = parts[3]; // language_book_text_type
+      // Create temp folder for extraction
+      const tempFolder = path.join(app.getPath('temp'), `superfiles-import-${Date.now()}`);
+      fs.mkdirSync(tempFolder, { recursive: true });
 
-      // Check if project with same language/book/type exists
-      const existing = db.getProjectByLanguageBookType(language, book, type);
+      // Extract ZIP file
+      const extract = require('extract-zip');
+      await extract(zipPath, { dir: tempFolder });
+      
+      // Look for manifest.json in extracted content
+      const manifestPath = path.join(tempFolder, 'manifest.json');
+      let language = 'en';
+      let book = 'mat';
+      let resource = 'ulb';
+      
+      if (fs.existsSync(manifestPath)) {
+        const manifestContent = fs.readFileSync(manifestPath, 'utf-8');
+        const manifest = JSON.parse(manifestContent);
+        
+        if (manifest.target_language?.id) {
+          language = manifest.target_language.id;
+        }
+        if (manifest.project?.id) {
+          book = manifest.project.id;
+        }
+        if (manifest.resource?.id) {
+          resource = manifest.resource.id;
+        }
+      }
+
+      // Check if project with same language/book/resource exists
+      const existing = db.getProjectByLanguageBookType(language, book, resource);
       if (existing) {
+        // Cleanup temp folder
+        fs.rmSync(tempFolder, { recursive: true, force: true });
         return { success: false, error: 'Project with this identifier already exists' };
       }
 
       // Create project in database
-      const project = db.createProject(language, book, type);
+      const project = db.createProject(language, book, resource);
       
-      // Create project folder using the generated project name
+      // Create project folder
       const projectFolder = path.join(app.getPath('home'), 'SuperFiles', project.name);
       if (!fs.existsSync(projectFolder)) {
         fs.mkdirSync(projectFolder, { recursive: true });
       }
 
-      // Extract ZIP file
-      const extract = require('extract-zip');
-      await extract(zipPath, { dir: projectFolder });
-      
-      // Create manifest.json if it doesn't exist
-      const manifestPath = path.join(projectFolder, 'manifest.json');
-      if (!fs.existsSync(manifestPath)) {
-        const manifest = {
-          package_version: 1,
-          format: "usfm",
-          generator: {
-            name: "superfiles",
-            build: "1"
-          },
-          target_language: {
-            id: language
-          },
-          project: {
-            id: book
-          },
-          type: {
-            id: "text",
-            name: "Text"
-          },
-          resource: {
-            id: type,
-            name: type
+      // Create contents folder
+      const contentsFolder = path.join(projectFolder, 'contents');
+      if (!fs.existsSync(contentsFolder)) {
+        fs.mkdirSync(contentsFolder, { recursive: true });
+      }
+
+      // Move files from temp to contents folder
+      const tempContentsFolder = path.join(tempFolder, 'contents');
+      if (fs.existsSync(tempContentsFolder)) {
+        // If ZIP has contents folder, copy from there
+        const files = fs.readdirSync(tempContentsFolder);
+        for (const file of files) {
+          const srcPath = path.join(tempContentsFolder, file);
+          const destPath = path.join(contentsFolder, file);
+          fs.copyFileSync(srcPath, destPath);
+        }
+      } else {
+        // Otherwise, copy from root of temp folder (skip manifest)
+        const files = fs.readdirSync(tempFolder);
+        for (const file of files) {
+          if (file !== 'manifest.json') {
+            const srcPath = path.join(tempFolder, file);
+            const destPath = path.join(contentsFolder, file);
+            fs.copyFileSync(srcPath, destPath);
           }
-        };
-        fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-        log.info(`Created manifest.json: ${manifestPath}`);
+        }
       }
       
-      log.info(`Imported project ${fileName} from ${zipPath}`);
+      // Cleanup temp folder
+      fs.rmSync(tempFolder, { recursive: true, force: true });
+      
+      // Create/update manifest.json
+      const newManifestPath = path.join(projectFolder, 'manifest.json');
+      const manifest = {
+        package_version: 1,
+        format: "usfm",
+        generator: {
+          name: "superfiles",
+          build: "1"
+        },
+        target_language: {
+          id: language
+        },
+        project: {
+          id: book
+        },
+        type: {
+          id: "text",
+          name: "Text"
+        },
+        resource: {
+          id: resource,
+          name: resource
+        }
+      };
+      fs.writeFileSync(newManifestPath, JSON.stringify(manifest, null, 2));
+      
+      log.info(`Imported project ${project.name} from ${zipPath}`);
       
       return { success: true, data: project };
     } catch (error: any) {
@@ -245,10 +288,16 @@ export function setupIpcHandlers(): void {
       }
 
       const projectFolder = path.join(app.getPath('home'), 'SuperFiles', project.name);
+      const contentsFolder = path.join(projectFolder, 'contents');
       
-      // Get existing files from filesystem
-      const existingFiles = fs.readdirSync(projectFolder)
-        .filter(f => fs.statSync(path.join(projectFolder, f)).isFile());
+      // Create contents folder if it doesn't exist
+      if (!fs.existsSync(contentsFolder)) {
+        fs.mkdirSync(contentsFolder, { recursive: true });
+      }
+      
+      // Get existing files from contents folder
+      const existingFiles = fs.readdirSync(contentsFolder)
+        .filter(f => fs.statSync(path.join(contentsFolder, f)).isFile());
       
       let nextNum = 1;
       
@@ -268,12 +317,12 @@ export function setupIpcHandlers(): void {
       
       // Generate filename with zero-padded number
       const fileName = `${String(nextNum).padStart(2, '0')}.txt`;
-      const filePath = path.join(projectFolder, fileName);
+      const filePath = path.join(contentsFolder, fileName);
       
       // Create empty file
       fs.writeFileSync(filePath, '', 'utf-8');
       
-      log.info(`Created file: ${fileName} in project ${project.name}`);
+      log.info(`Created file: ${fileName} in project ${project.name}/contents`);
       
       return { success: true, data: { id: fileName, name: fileName, path: filePath } };
     } catch (error: any) {
@@ -314,16 +363,18 @@ export function setupIpcHandlers(): void {
       }
 
       const projectFolder = path.join(app.getPath('home'), 'SuperFiles', project.name);
-      if (!fs.existsSync(projectFolder)) {
+      const contentsFolder = path.join(projectFolder, 'contents');
+      
+      if (!fs.existsSync(contentsFolder)) {
         return { success: true, data: [] };
       }
 
-      const files = fs.readdirSync(projectFolder)
-        .filter(f => fs.statSync(path.join(projectFolder, f)).isFile())
+      const files = fs.readdirSync(contentsFolder)
+        .filter(f => fs.statSync(path.join(contentsFolder, f)).isFile())
         .map(f => ({
           id: f,
           name: f,
-          path: path.join(projectFolder, f)
+          path: path.join(contentsFolder, f)
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
 
