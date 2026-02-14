@@ -281,6 +281,16 @@ export class WorkflowScreen extends LitElement {
         await this.loadFileContent(file);
       }
       this.editingFileId = file.id;
+      
+      // Focus the textarea after render
+      requestAnimationFrame(() => {
+        const textarea = this.shadowRoot
+            ?.querySelector(`textarea[data-file-id="${file.id}"]`) as HTMLTextAreaElement;
+        if (textarea) {
+          textarea.focus();
+          textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        }
+      });
     }
   }
 
@@ -364,6 +374,7 @@ export class WorkflowScreen extends LitElement {
                     ${this.editingFileId === file.id ? html`
                       <textarea
                         class="content-edit"
+                        data-file-id="${file.id}"
                         .value=${this.fileContents.get(file.id) || ''}
                         @input=${(e: Event) => this.handleContentChange(file, e)}
                       ></textarea>
