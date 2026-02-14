@@ -16,7 +16,10 @@
     "package": "npm run build && electron-builder --win --mac --linux",
     "package:win": "npm run build && electron-builder --win",
     "package:mac": "npm run build && electron-builder --mac",
-    "package:linux": "npm run build && electron-builder --linux"
+    "package:linux": "npm run build && electron-builder --linux",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@fontsource/material-icons": "^5.2.7",
@@ -33,6 +36,7 @@
     "@lit/localize-tools": "^0.8.1",
     "@types/archiver": "^7.0.0",
     "@types/better-sqlite3": "^7.6.13",
+    "@vitest/coverage-v8": "^4.0.18",
     "concurrently": "^9.2.1",
     "electron": "^40.4.1",
     "electron-builder": "^26.7.0",
@@ -40,6 +44,7 @@
     "lit": "^3.3.2",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
+    "vitest": "^4.0.18",
     "wait-on": "^9.0.4"
   },
   "build": {

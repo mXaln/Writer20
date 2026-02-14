@@ -16,5 +16,5 @@
     "lib": ["ES2022"]
   },
   "include": ["src/main/**/*", "src/preload/**/*"],
-  "exclude": ["node_modules", "src/renderer/**/*"]
+  "exclude": ["node_modules", "src/renderer/**/*", "__mocks__"]
 }
