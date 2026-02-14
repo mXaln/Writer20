@@ -4,15 +4,12 @@ export interface Project {
   description: string;
   created_at: string;
   updated_at: string;
-  fileCount?: number;
 }
 
 export interface FileItem {
-  id: number;
-  project_id: number;
+  id: string;
   name: string;
   path: string;
-  created_at: string;
 }
 
 export interface Settings {
@@ -38,13 +35,14 @@ declare global {
       getProject: (id: number) => Promise<IpcResult<Project>>;
       deleteProject: (id: number) => Promise<IpcResult>;
       exportProject: (id: number) => Promise<IpcResult<string | null>>;
+      importProject: () => Promise<IpcResult<Project | null>>;
       addFiles: (projectId: number) => Promise<IpcResult<FileItem[]>>;
       createFile: (projectId: number) => Promise<IpcResult<FileItem>>;
       readFile: (filePath: string) => Promise<IpcResult<string>>;
       writeFile: (filePath: string, content: string) => Promise<IpcResult>;
       listFiles: (projectId: number) => Promise<IpcResult<FileItem[]>>;
       openFile: (filePath: string) => Promise<IpcResult>;
-      removeFile: (id: number, deleteFromDisk: boolean) => Promise<IpcResult>;
+      removeFile: (filePath: string, deleteFromDisk: boolean) => Promise<IpcResult>;
       getSettings: () => Promise<IpcResult<Settings>>;
       setSetting: (key: string, value: string) => Promise<IpcResult>;
       getPath: (name: string) => Promise<IpcResult<string>>;

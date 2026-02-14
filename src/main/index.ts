@@ -75,12 +75,6 @@ app.whenReady().then(async () => {
     log.error('Initialization error:', error);
     app.exit(1);
   }
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
-  });
 });
 
 app.on('window-all-closed', () => {

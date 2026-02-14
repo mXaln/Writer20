@@ -35,11 +35,7 @@ export function setupIpcHandlers(): void {
   ipcMain.handle('project:list', async () => {
     try {
       const projects = db.getAllProjects();
-      // Add file count to each project
-      return { success: true, data: projects.map(p => ({
-        ...p,
-        fileCount: db.getProjectFileCount(p.id)
-      }))};
+      return { success: true, data: projects };
     } catch (error: any) {
       log.error('Error listing projects:', error);
       return { success: false, error: error.message };
@@ -52,13 +48,7 @@ export function setupIpcHandlers(): void {
       if (!project) {
         return { success: false, error: 'Project not found' };
       }
-      return { 
-        success: true, 
-        data: {
-          ...project,
-          fileCount: db.getProjectFileCount(id)
-        }
-      };
+      return { success: true, data: project };
     } catch (error: any) {
       log.error('Error getting project:', error);
       return { success: false, error: error.message };
@@ -136,43 +126,46 @@ export function setupIpcHandlers(): void {
     }
   });
 
-  // File handlers
-  ipcMain.handle('file:add', async (_event, projectId: number) => {
+  ipcMain.handle('project:import', async () => {
     try {
-      const project = db.getProject(projectId);
-      if (!project) {
-        return { success: false, error: 'Project not found' };
-      }
-
-      // Open file dialog
+      // Show open dialog to select ZIP file
       const result = await dialog.showOpenDialog({
-        properties: ['openFile', 'multiSelections'],
-        title: 'Select files to add'
+        title: 'Import Project from ZIP',
+        filters: [{ name: 'ZIP Files', extensions: ['zip'] }],
+        properties: ['openFile']
       });
 
       if (result.canceled || result.filePaths.length === 0) {
-        return { success: true, data: [] };
+        return { success: true, data: null };
       }
 
-      const projectFolder = path.join(app.getPath('home'), 'SuperFiles', project.name);
-      const addedFiles: any[] = [];
-
-      for (const filePath of result.filePaths) {
-        const fileName = path.basename(filePath);
-        const destPath = path.join(projectFolder, fileName);
-
-        // Copy file to project folder
-        fs.copyFileSync(filePath, destPath);
-        
-        // Add to database
-        const file = db.addFile(projectId, fileName, destPath);
-        addedFiles.push(file);
-        log.info(`Added file: ${fileName} to project ${project.name}`);
+      const zipPath = result.filePaths[0];
+      const fileName = path.basename(zipPath, '.zip');
+      
+      // Check if project with same name exists
+      const existing = db.getProjectByName(fileName);
+      if (existing) {
+        return { success: false, error: 'Project with this name already exists' };
       }
 
-      return { success: true, data: addedFiles };
+      // Create project in database
+      const project = db.createProject(fileName, '');
+      
+      // Create project folder
+      const projectFolder = path.join(app.getPath('home'), 'SuperFiles', fileName);
+      if (!fs.existsSync(projectFolder)) {
+        fs.mkdirSync(projectFolder, { recursive: true });
+      }
+
+      // Extract ZIP file
+      const extract = require('extract-zip');
+      await extract(zipPath, { dir: projectFolder });
+      
+      log.info(`Imported project ${fileName} from ${zipPath}`);
+      
+      return { success: true, data: project };
     } catch (error: any) {
-      log.error('Error adding files:', error);
+      log.error('Error importing project:', error);
       return { success: false, error: error.message };
     }
   });
@@ -186,18 +179,20 @@ export function setupIpcHandlers(): void {
 
       const projectFolder = path.join(app.getPath('home'), 'SuperFiles', project.name);
       
-      // Get existing files to determine next number
-      const existingFiles = db.getProjectFiles(projectId);
+      // Get existing files from filesystem
+      const existingFiles = fs.readdirSync(projectFolder)
+        .filter(f => fs.statSync(path.join(projectFolder, f)).isFile());
+      
       let nextNum = 1;
       
       // Find the next available number
       const existingNumbers = new Set(
         existingFiles
-          .map(f => {
-            const match = f.name.match(/^(\d+)\.txt$/);
+          .map((f: string) => {
+            const match = f.match(/^(\d+)\.txt$/);
             return match ? parseInt(match[1], 10) : null;
           })
-          .filter(n => n !== null) as number[]
+          .filter((n: number | null): n is number => n !== null)
       );
       
       while (existingNumbers.has(nextNum)) {
@@ -211,11 +206,9 @@ export function setupIpcHandlers(): void {
       // Create empty file
       fs.writeFileSync(filePath, '', 'utf-8');
       
-      // Add to database
-      const file = db.addFile(projectId, fileName, filePath);
       log.info(`Created file: ${fileName} in project ${project.name}`);
       
-      return { success: true, data: file };
+      return { success: true, data: { id: fileName, name: fileName, path: filePath } };
     } catch (error: any) {
       log.error('Error creating file:', error);
       return { success: false, error: error.message };
@@ -248,7 +241,25 @@ export function setupIpcHandlers(): void {
 
   ipcMain.handle('file:list', async (_event, projectId: number) => {
     try {
-      const files = db.getProjectFiles(projectId);
+      const project = db.getProject(projectId);
+      if (!project) {
+        return { success: false, error: 'Project not found' };
+      }
+
+      const projectFolder = path.join(app.getPath('home'), 'SuperFiles', project.name);
+      if (!fs.existsSync(projectFolder)) {
+        return { success: true, data: [] };
+      }
+
+      const files = fs.readdirSync(projectFolder)
+        .filter(f => fs.statSync(path.join(projectFolder, f)).isFile())
+        .map(f => ({
+          id: f,
+          name: f,
+          path: path.join(projectFolder, f)
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
       return { success: true, data: files };
     } catch (error: any) {
       log.error('Error listing files:', error);
@@ -273,20 +284,18 @@ export function setupIpcHandlers(): void {
     }
   });
 
-  ipcMain.handle('file:remove', async (_event, id: number, deleteFromDisk: boolean = false) => {
+  ipcMain.handle('file:remove', async (_event, filePath: string, deleteFromDisk: boolean = true) => {
     try {
-      const file = db.getFile(id);
-      if (!file) {
+      if (!fs.existsSync(filePath)) {
         return { success: false, error: 'File not found' };
       }
 
-      // Optionally delete from disk
-      if (deleteFromDisk && fs.existsSync(file.path)) {
-        fs.unlinkSync(file.path);
-        log.info(`Deleted file from disk: ${file.path}`);
+      // Delete from disk
+      if (deleteFromDisk) {
+        fs.unlinkSync(filePath);
+        log.info(`Deleted file from disk: ${filePath}`);
       }
 
-      db.deleteFile(id);
       return { success: true };
     } catch (error: any) {
       log.error('Error removing file:', error);

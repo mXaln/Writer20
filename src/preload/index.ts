@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('project:delete', id),
   exportProject: (id: number) =>
     ipcRenderer.invoke('project:export', id),
+  importProject: () =>
+    ipcRenderer.invoke('project:import'),
 
   // File operations
   addFiles: (projectId: number) =>
@@ -28,8 +30,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('file:list', projectId),
   openFile: (filePath: string) =>
     ipcRenderer.invoke('file:open', filePath),
-  removeFile: (id: number, deleteFromDisk: boolean) =>
-    ipcRenderer.invoke('file:remove', id, deleteFromDisk),
+  removeFile: (filePath: string, deleteFromDisk: boolean) =>
+    ipcRenderer.invoke('file:remove', filePath, deleteFromDisk),
 
   // Settings
   getSettings: () =>

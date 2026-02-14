@@ -235,6 +235,9 @@ export class DashboardScreen extends LitElement {
   async connectedCallback() {
     super.connectedCallback();
     await this.loadProjects();
+    
+    // Listen for project updates (imports, etc.)
+    window.addEventListener('projects-updated', () => this.loadProjects());
   }
 
   private async loadProjects() {
@@ -437,11 +440,6 @@ export class DashboardScreen extends LitElement {
                 <div class="form-label">${this.translations.projectInfo.description}</div>
                 <div class="description-value">${this.selectedProject.description}</div>
               ` : ''}
-              
-              <div class="form-label">${this.translations.projectInfo.files}</div>
-              <div class="file-count-badge">
-                ${this.selectedProject.fileCount || 0}
-              </div>
             </div>
             <div class="modal-footer">
               <button class="delete-btn" @click=${this.deleteProject}>

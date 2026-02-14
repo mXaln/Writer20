@@ -40,15 +40,6 @@ export async function initDatabase(): Promise<void> {
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
-    CREATE TABLE IF NOT EXISTS files (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      project_id INTEGER NOT NULL,
-      name TEXT NOT NULL,
-      path TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    );
-
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
@@ -96,35 +87,6 @@ export function getProjectByName(name: string): any {
 export function deleteProject(id: number): void {
   const db = getDatabase();
   db.prepare('DELETE FROM projects WHERE id = ?').run(id);
-}
-
-// File operations
-export function addFile(projectId: number, name: string, filePath: string): any {
-  const db = getDatabase();
-  const stmt = db.prepare('INSERT INTO files (project_id, name, path) VALUES (?, ?, ?)');
-  const result = stmt.run(projectId, name, filePath);
-  return { id: result.lastInsertRowid, project_id: projectId, name, path: filePath };
-}
-
-export function getProjectFiles(projectId: number): any[] {
-  const db = getDatabase();
-  return db.prepare('SELECT * FROM files WHERE project_id = ? ORDER BY name ASC').all(projectId);
-}
-
-export function getFile(id: number): any {
-  const db = getDatabase();
-  return db.prepare('SELECT * FROM files WHERE id = ?').get(id);
-}
-
-export function deleteFile(id: number): void {
-  const db = getDatabase();
-  db.prepare('DELETE FROM files WHERE id = ?').run(id);
-}
-
-export function getProjectFileCount(projectId: number): number {
-  const db = getDatabase();
-  const result = db.prepare('SELECT COUNT(*) as count FROM files WHERE project_id = ?').get(projectId) as { count: number };
-  return result.count;
 }
 
 // Settings operations
