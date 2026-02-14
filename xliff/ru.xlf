@@ -134,6 +134,10 @@
   <source>Spanish</source>
   <target>Испанский</target>
 </trans-unit>
+<trans-unit id="sdef34fe08bb28b09">
+  <source>Chinese (Simplified)</source>
+  <target>Китайский (упрощённый)</target>
+</trans-unit>
 </body>
 </file>
 </xliff>

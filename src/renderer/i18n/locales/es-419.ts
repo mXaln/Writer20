@@ -38,6 +38,7 @@
 'sd3083da97938e2e2': `Exportar proyecto`,
 'sdacfa415c37390ed': `El idioma debe contener solo letras minúsculas, números o guiones`,
 'sdc673e73b5c13aea': `Eliminar`,
+'sdef34fe08bb28b09': `Chino (Simplificado)`,
 'sefcf950b3cc4fc3b': `Idioma`,
 'sf0e261e04eda82ff': `Apariencia`,
 'sf1868dc19e3917bb': `Español`,

@@ -159,6 +159,7 @@ export class SettingsScreen extends LitElement {
             'en': msg('English'),
             'es-419': msg('Spanish'),
             'ru': msg('Russian'),
+            'zh-Hans': msg('Chinese (Simplified)'),
         };
         return locales[locale];
     }
