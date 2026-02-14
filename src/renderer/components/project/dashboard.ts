@@ -1,6 +1,7 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, state, property} from 'lit/decorators.js';
 import {Project} from '../../types';
+import {Translations} from '../../i18n/en';
 import {baseStyles} from "../../styles/base";
 import {fontStyles} from "../../styles/fonts";
 import '@lit-labs/virtualizer';
@@ -195,21 +196,21 @@ export class DashboardScreen extends LitElement {
         // Validate language: lowercase, a-z0-9-, no spaces
         const languageRegex = /^[a-z0-9-]+$/;
         if (!this.newLanguage.trim() || !languageRegex.test(this.newLanguage)) {
-            this.error = 'Language must be lowercase letters, numbers, or hyphens only';
+            this.error = this.translations.errors.invalidLanguage;
             return;
         }
 
         // Validate book: lowercase, a-z0-9, exactly 3 characters
         const bookRegex = /^[a-z0-9]{3}$/;
         if (!this.newBook.trim() || !bookRegex.test(this.newBook)) {
-            this.error = 'Book must be exactly 3 lowercase letters or numbers';
+            this.error = this.translations.errors.invalidBook;
             return;
         }
 
         // Validate type: lowercase, a-z0-9, max 3 characters
         const typeRegex = /^[a-z0-9]{1,3}$/;
         if (!this.newType.trim() || !typeRegex.test(this.newType)) {
-            this.error = 'Type must be 1-3 lowercase letters or numbers';
+            this.error = this.translations.errors.invalidType;
             return;
         }
 
@@ -261,7 +262,7 @@ export class DashboardScreen extends LitElement {
             }
         } catch (error) {
             console.error('Failed to export project:', error);
-            this.error = 'Failed to export project';
+            this.error = this.translations.errors.failedToExport;
         }
     }
 
@@ -281,7 +282,7 @@ export class DashboardScreen extends LitElement {
             }
         } catch (error) {
             console.error('Failed to delete project:', error);
-            this.error = 'Failed to delete project';
+            this.error = this.translations.errors.failedToDelete;
         }
     }
 

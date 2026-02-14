@@ -8,6 +8,7 @@ export interface Translations {
     dashboard: string;
     workflow: string;
     settings: string;
+    importProject: string;
   };
   dashboard: {
     title: string;
@@ -26,6 +27,9 @@ export interface Translations {
     files: string;
     close: string;
     description: string;
+    delete: string;
+    exportProject: string;
+    deleteConfirm: string;
   };
   workflow: {
     back: string;
@@ -37,6 +41,8 @@ export interface Translations {
     fileName: string;
     filePath: string;
     actions: string;
+    edit: string;
+    save: string;
   };
   settings: {
     title: string;
@@ -54,6 +60,12 @@ export interface Translations {
     duplicateName: string;
     fileNotFound: string;
     databaseError: string;
+    invalidLanguage: string;
+    invalidBook: string;
+    invalidType: string;
+    failedToExport: string;
+    failedToDelete: string;
+    failedToSave: string;
   };
 }
 
@@ -65,6 +77,7 @@ const en: Translations = {
     dashboard: 'Dashboard',
     workflow: 'Workflow',
     settings: 'Settings',
+    importProject: 'Import Project',
   },
   dashboard: {
     title: 'Projects',
@@ -97,6 +110,8 @@ const en: Translations = {
     fileName: 'Name',
     filePath: 'Path',
     actions: 'Actions',
+    edit: 'Edit',
+    save: 'Save',
   },
   settings: {
     title: 'Settings',
@@ -114,6 +129,12 @@ const en: Translations = {
     duplicateName: 'Project with this name already exists',
     fileNotFound: 'File not found',
     databaseError: 'Database error occurred',
+    invalidLanguage: 'Language must be lowercase letters, numbers, or hyphens only',
+    invalidBook: 'Book must be exactly 3 lowercase letters or numbers',
+    invalidType: 'Type must be 1-3 lowercase letters or numbers',
+    failedToExport: 'Failed to export project',
+    failedToDelete: 'Failed to delete project',
+    failedToSave: 'Failed to save file',
   },
 };
 
@@ -125,6 +146,7 @@ const ru: Translations = {
     dashboard: 'Главная',
     workflow: 'Рабочая область',
     settings: 'Настройки',
+    importProject: 'Импорт проекта',
   },
   dashboard: {
     title: 'Проекты',
@@ -157,6 +179,8 @@ const ru: Translations = {
     fileName: 'Имя',
     filePath: 'Путь',
     actions: 'Действия',
+    edit: 'Редактировать',
+    save: 'Сохранить',
   },
   settings: {
     title: 'Настройки',
@@ -174,6 +198,12 @@ const ru: Translations = {
     duplicateName: 'Проект с таким названием уже существует',
     fileNotFound: 'Файл не найден',
     databaseError: 'Произошла ошибка базы данных',
+    invalidLanguage: 'Язык должен содержать только строчные буквы, цифры или дефисы',
+    invalidBook: 'Книга должна быть ровно 3 строчные буквы или цифры',
+    invalidType: 'Тип должен быть 1-3 строчные буквы или цифры',
+    failedToExport: 'Не удалось экспортировать проект',
+    failedToDelete: 'Не удалось удалить проект',
+    failedToSave: 'Не удалось сохранить файл',
   },
 };
 

@@ -244,7 +244,7 @@ export class AppShell extends LitElement {
                                 <div class="dropdown-menu">
                                     <button class="menu-item" @click=${() => this.importProject()}>
                                         <span class="material-icons">file_upload</span>
-                                        Import Project
+                                        ${this.translations.nav.importProject}
                                     </button>
                                     <button class="menu-item" @click=${() => this.navigateTo('settings')}>
                                         <span class="material-icons">settings</span>

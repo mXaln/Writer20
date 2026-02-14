@@ -1,6 +1,7 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {FileItem} from '../../types';
+import {Translations} from '../../i18n/en';
 import {baseStyles} from "../../styles/base";
 import {fontStyles} from "../../styles/fonts";
 
@@ -106,6 +107,7 @@ export class FileCard extends LitElement {
     @property({type: Object}) file!: FileItem;
     @property({type: Boolean}) isEditing = false;
     @property({type: String}) content = '';
+    @property({type: Object}) translations!: Translations;
 
     private handleToggleEdit() {
         this.dispatchEvent(new CustomEvent('toggle-edit', {
@@ -133,7 +135,7 @@ export class FileCard extends LitElement {
                         <button
                                 class="icon-btn ${this.isEditing ? 'active' : ''}"
                                 @click=${this.handleToggleEdit}
-                                title="${this.isEditing ? 'Save' : 'Edit'}"
+                                title="${this.isEditing ? this.translations.workflow.save : this.translations.workflow.edit}"
                         >
                             ${this.isEditing ? html`
                                 <span class="material-icons">check</span>

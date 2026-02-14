@@ -267,11 +267,11 @@ export class WorkflowScreen extends LitElement {
         try {
             const result = await window.electronAPI.writeFile(file.path, content);
             if (!result.success) {
-                this.showError(result.error || 'Failed to save file');
+                this.showError(result.error || this.translations.errors.failedToSave);
             }
         } catch (error) {
             console.error('Failed to save file:', error);
-            this.showError('Failed to save file');
+            this.showError(this.translations.errors.failedToSave);
         }
     }
 
@@ -355,6 +355,7 @@ export class WorkflowScreen extends LitElement {
                                             .file=${file}
                                             .isEditing=${this.editingFileId === file.id}
                                             .content=${this.fileContents.get(file.id) || ''}
+                                            .translations=${this.translations}
                                             @toggle-edit=${(e: CustomEvent) => this.handleToggleEdit(e)}
                                             @content-change=${(e: CustomEvent) => this.handleContentChange(e)}
                                     ></file-card>
