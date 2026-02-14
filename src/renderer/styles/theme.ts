@@ -3,31 +3,33 @@ import { Theme } from '../types';
 
 export const lightTheme = css`
   :host {
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #F5F5F5;
     --surface: #FFFFFF;
-    --primary: #2196F3;
-    --primary-hover: #1976D2;
-    --secondary: #757575;
-    --text-primary: #212121;
-    --text-secondary: #757575;
-    --border: #E0E0E0;
-    --error: #F44336;
-    --success: #4CAF50;
-    --shadow-card: 0 2px 4px rgba(0,0,0,0.1);
-    --shadow-elevated: 0 4px 8px rgba(0,0,0,0.15);
+    --primary: #0250D3;
+    --primary-dark: #003389;
+    --primary-hover: #0247B8;
+    --bg-primary: #EFEFEF;
+    --secondary: #6C757D;
+    --bg-secondary: #F5F5F5;
+    --text-primary: #212529;
+    --text-secondary: #6C757D;
+    --border: #DEE2E6;
+    --error: #DC3545;
+    --success: #28A745;
+    --shadow-card: 0 2px 4px rgba(0,0,0,0.08);
+    --shadow-elevated: 0 4px 8px rgba(0,0,0,0.12);
     --overlay: rgba(0,0,0,0.5);
   }
 `;
 
 export const darkTheme = css`
   :host {
-    --bg-primary: #121212;
-    --bg-secondary: #1E1E1E;
     --surface: #2D2D2D;
     --primary: #64B5F6;
+    --primary-dark: #445E89;
     --primary-hover: #90CAF9;
+    --bg-primary: #121212;
     --secondary: #B0B0B0;
+    --bg-secondary: #1E1E1E;
     --text-primary: #FFFFFF;
     --text-secondary: #B0B0B0;
     --border: #424242;

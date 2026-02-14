@@ -28,7 +28,7 @@ export class SettingsScreen extends LitElement {
     }
 
     .back-btn:hover {
-      background-color: var(--bg-secondary);
+      background-color: rgba(0,0,0,0.1);
       color: var(--text-primary);
     }
 

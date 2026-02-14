@@ -22,14 +22,14 @@ export class AppShell extends LitElement {
         justify-content: space-between;
         align-items: center;
         padding: 16px 24px;
-        background-color: var(--bg-secondary);
+        background-color: var(--primary-dark);
         border-bottom: 1px solid var(--border);
       }
 
       .app-title {
         font-size: 20px;
         font-weight: 600;
-        color: var(--primary);
+        color: #FFFFFF;
       }
 
       .nav-panel {
@@ -37,7 +37,7 @@ export class AppShell extends LitElement {
         flex-direction: column;
         height: calc(100vh - 65px);
         width: 80px;
-        background-color: var(--bg-secondary);
+        background-color: var(--primary);
         border-right: 1px solid var(--border);
         padding: 16px 0;
       }
@@ -47,8 +47,11 @@ export class AppShell extends LitElement {
       }
 
       .nav-bottom {
-        padding: 16px;
+        display: flex;
+        justify-content: center;
+        padding: 16px 0;
         border-top: 1px solid var(--border);
+        position: relative;
       }
 
       .menu-btn {
@@ -56,7 +59,7 @@ export class AppShell extends LitElement {
         border: none;
         padding: 8px;
         cursor: pointer;
-        color: var(--text-secondary);
+        color: #FFFFFF;
         border-radius: 4px;
         display: flex;
         align-items: center;
@@ -65,14 +68,16 @@ export class AppShell extends LitElement {
       }
 
       .menu-btn:hover {
-        background-color: var(--surface);
-        color: var(--text-primary);
+        background-color: rgba(255,255,255,0.3);
+        color: #FFFFFF;
       }
 
       .dropdown-menu {
         position: absolute;
-        bottom: 60px;
-        left: 16px;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-10%);
+        margin-bottom: 8px;
         background-color: var(--surface);
         border: 1px solid var(--border);
         border-radius: 8px;
@@ -205,31 +210,33 @@ export class AppShell extends LitElement {
         <span class="app-title">${this.translations.app.name}</span>
       </header>
       <div style="display: flex; flex: 1;">
-        <nav class="nav-panel" @click=${this.closeMenu}>
-          <div class="nav-items"></div>
-          <div class="nav-bottom">
-            <button class="menu-btn" @click=${(e: Event) => { e.stopPropagation(); this.toggleMenu(); }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="12" cy="5" r="2"></circle>
-                <circle cx="12" cy="12" r="2"></circle>
-                <circle cx="12" cy="19" r="2"></circle>
-              </svg>
-            </button>
-            ${this.showMenu ? html`
-              <div class="dropdown-menu">
-                <button class="menu-item" @click=${() => this.navigateTo('settings')}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                  </svg>
-                  ${this.translations.nav.settings}
-                </button>
+        ${this.currentScreen !== 'settings' ? html`
+          <nav class="nav-panel" @click=${this.closeMenu}>
+            <div class="nav-items"></div>
+            <div class="nav-bottom">
+              <button class="menu-btn" @click=${(e: Event) => { e.stopPropagation(); this.toggleMenu(); }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="5" r="2"></circle>
+                  <circle cx="12" cy="12" r="2"></circle>
+                  <circle cx="12" cy="19" r="2"></circle>
+                </svg>
+              </button>
+              ${this.showMenu ? html`
+                <div class="dropdown-menu">
+                  <button class="menu-item" @click=${() => this.navigateTo('settings')}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    ${this.translations.nav.settings}
+                  </button>
+              </div>
+            ` : ''}
             </div>
-          ` : ''}
-        </div>
-      </nav>
+          </nav>
+        ` : ''}
 
-      <main class="content" @click=${this.closeMenu}>
+        <main class="content" @click=${this.closeMenu}>
         ${this.currentScreen === 'dashboard' ? html`
           <dashboard-screen 
             .translations=${this.translations}

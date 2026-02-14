@@ -36,7 +36,7 @@ export class WorkflowScreen extends LitElement {
     }
 
     .back-btn:hover {
-      background-color: var(--bg-secondary);
+      background-color: rgba(0,0,0,0.1);
       color: var(--text-primary);
     }
 
@@ -106,7 +106,7 @@ export class WorkflowScreen extends LitElement {
     }
 
     .icon-btn:hover {
-      background-color: var(--bg-secondary);
+      background-color: rgba(0,0,0,0.1);
       color: var(--primary);
     }
 

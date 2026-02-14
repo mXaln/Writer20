@@ -79,7 +79,7 @@ export class DashboardScreen extends LitElement {
     }
 
     .info-btn:hover {
-      background-color: var(--bg-secondary);
+      background-color: rgba(0,0,0,0.1);
       color: var(--primary);
     }
 
