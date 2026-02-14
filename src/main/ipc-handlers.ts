@@ -6,20 +6,20 @@ import * as db from './database';
 
 export function setupIpcHandlers(): void {
   // Project handlers
-  ipcMain.handle('project:create', async (_event, name: string, description: string) => {
+  ipcMain.handle('project:create', async (_event, language: string, book: string, type: string) => {
     try {
-      log.info(`Creating project: ${name}`);
-      
-      // Check if project with same name exists
-      const existing = db.getProjectByName(name);
+      // Check if project with same language/book/type exists
+      const existing = db.getProjectByLanguageBookType(language, book, type);
       if (existing) {
-        return { success: false, error: 'Project with this name already exists' };
+        return { success: false, error: 'Project with this identifier already exists' };
       }
-
-      const project = db.createProject(name, description);
       
-      // Create project folder in ~/SuperFiles
-      const superFilesPath = path.join(app.getPath('home'), 'SuperFiles', name);
+      // Create project in database
+      const project = db.createProject(language, book, type);
+      log.info(`Creating project: ${project.name}`);
+      
+      // Create project folder in ~/SuperFiles using project.name
+      const superFilesPath = path.join(app.getPath('home'), 'SuperFiles', project.name);
       if (!fs.existsSync(superFilesPath)) {
         fs.mkdirSync(superFilesPath, { recursive: true });
         log.info(`Created project folder: ${superFilesPath}`);
@@ -142,17 +142,28 @@ export function setupIpcHandlers(): void {
       const zipPath = result.filePaths[0];
       const fileName = path.basename(zipPath, '.zip');
       
-      // Check if project with same name exists
-      const existing = db.getProjectByName(fileName);
+      // Parse filename to extract language/book/type
+      // Expected format: language_book_text_type or language_book_type
+      const parts = fileName.split('_');
+      let language = fileName;
+      let book = 'mat';
+      let type = 'ulb';
+      
+      if (parts.length >= 1) language = parts[0];
+      if (parts.length >= 2) book = parts[1];
+      if (parts.length >= 4) type = parts[3]; // language_book_text_type
+
+      // Check if project with same language/book/type exists
+      const existing = db.getProjectByLanguageBookType(language, book, type);
       if (existing) {
-        return { success: false, error: 'Project with this name already exists' };
+        return { success: false, error: 'Project with this identifier already exists' };
       }
 
       // Create project in database
-      const project = db.createProject(fileName, '');
+      const project = db.createProject(language, book, type);
       
-      // Create project folder
-      const projectFolder = path.join(app.getPath('home'), 'SuperFiles', fileName);
+      // Create project folder using the generated project name
+      const projectFolder = path.join(app.getPath('home'), 'SuperFiles', project.name);
       if (!fs.existsSync(projectFolder)) {
         fs.mkdirSync(projectFolder, { recursive: true });
       }

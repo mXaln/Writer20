@@ -319,7 +319,7 @@ export class WorkflowScreen extends LitElement {
             </svg>
             ${this.translations.workflow.back}
           </button>
-          <h1 class="project-title">${this.project?.name || ''}</h1>
+          <h1 class="project-title">${this.project?.language} - ${this.project?.book} - ${this.project?.type}</h1>
         </div>
       </div>
 

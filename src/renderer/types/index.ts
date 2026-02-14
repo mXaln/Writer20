@@ -1,7 +1,9 @@
 export interface Project {
   id: number;
   name: string;
-  description: string;
+  language: string;
+  book: string;
+  type: string;
   created_at: string;
   updated_at: string;
 }
@@ -30,7 +32,7 @@ export interface IpcResult<T = any> {
 declare global {
   interface Window {
     electronAPI: {
-      createProject: (name: string, description: string) => Promise<IpcResult<Project>>;
+      createProject: (language: string, book: string, type: string) => Promise<IpcResult<Project>>;
       listProjects: () => Promise<IpcResult<Project[]>>;
       getProject: (id: number) => Promise<IpcResult<Project>>;
       deleteProject: (id: number) => Promise<IpcResult>;

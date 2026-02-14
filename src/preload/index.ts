@@ -4,8 +4,8 @@ import { contextBridge, ipcRenderer } from 'electron';
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
   // Project operations
-  createProject: (name: string, description: string) =>
-    ipcRenderer.invoke('project:create', name, description),
+  createProject: (language: string, book: string, type: string) =>
+    ipcRenderer.invoke('project:create', language, book, type),
   listProjects: () =>
     ipcRenderer.invoke('project:list'),
   getProject: (id: number) =>

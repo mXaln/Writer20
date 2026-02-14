@@ -81,15 +81,10 @@ export class DashboardScreen extends LitElement {
       padding-right: 40px;
     }
 
-    .project-description {
+    .project-meta {
       font-size: 14px;
       color: var(--text-secondary);
       flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
     }
 
     .info-btn {
@@ -186,6 +181,7 @@ export class DashboardScreen extends LitElement {
       background-color: var(--bg-primary);
       color: var(--text-primary);
       font-size: 14px;
+      box-sizing: border-box;
     }
 
     .form-input:focus {
@@ -202,6 +198,21 @@ export class DashboardScreen extends LitElement {
       color: var(--error);
       font-size: 12px;
       margin-top: 4px;
+    }
+
+    .info-row {
+      display: flex;
+      margin-bottom: 8px;
+    }
+
+    .info-label {
+      font-weight: 500;
+      margin-right: 8px;
+      color: var(--text-secondary);
+    }
+
+    .info-value {
+      color: var(--text-primary);
     }
 
     .modal-footer {
@@ -255,8 +266,9 @@ export class DashboardScreen extends LitElement {
   @state() private showCreateModal = false;
   @state() private showInfoModal = false;
   @state() private selectedProject: Project | null = null;
-  @state() private newProjectName = '';
-  @state() private newProjectDescription = '';
+  @state() private newLanguage = '';
+  @state() private newBook = '';
+  @state() private newType = 'ulb';
   @state() private error = '';
 
   async connectedCallback() {
@@ -280,8 +292,9 @@ export class DashboardScreen extends LitElement {
 
   private openCreateModal() {
     this.showCreateModal = true;
-    this.newProjectName = '';
-    this.newProjectDescription = '';
+    this.newLanguage = '';
+    this.newBook = '';
+    this.newType = 'ulb';
     this.error = '';
   }
 
@@ -291,22 +304,39 @@ export class DashboardScreen extends LitElement {
   }
 
   private async createProject() {
-    if (!this.newProjectName.trim()) {
-      this.error = this.translations.errors.required;
+    // Validate language: lowercase, a-z0-9-, no spaces
+    const languageRegex = /^[a-z0-9-]+$/;
+    if (!this.newLanguage.trim() || !languageRegex.test(this.newLanguage)) {
+      this.error = 'Language must be lowercase letters, numbers, or hyphens only';
+      return;
+    }
+
+    // Validate book: lowercase, a-z0-9, exactly 3 characters
+    const bookRegex = /^[a-z0-9]{3}$/;
+    if (!this.newBook.trim() || !bookRegex.test(this.newBook)) {
+      this.error = 'Book must be exactly 3 lowercase letters or numbers';
+      return;
+    }
+
+    // Validate type: lowercase, a-z0-9, max 3 characters
+    const typeRegex = /^[a-z0-9]{1,3}$/;
+    if (!this.newType.trim() || !typeRegex.test(this.newType)) {
+      this.error = 'Type must be 1-3 lowercase letters or numbers';
       return;
     }
 
     try {
       const result = await window.electronAPI.createProject(
-        this.newProjectName.trim(),
-        this.newProjectDescription.trim()
+        this.newLanguage.trim(),
+        this.newBook.trim(),
+        this.newType.trim()
       );
 
       if (result.success) {
         await this.loadProjects();
         this.closeCreateModal();
       } else {
-        this.error = result.error || this.translations.errors.duplicateName;
+        this.error = result.error || this.translations.errors.databaseError;
       }
     } catch (error) {
       console.error('Failed to create project:', error);
@@ -384,10 +414,7 @@ export class DashboardScreen extends LitElement {
         <div class="projects-grid">
           ${this.projects.map(project => html`
             <div class="project-card" @click=${() => this.openWorkflow(project)}>
-              <div class="project-name">${project.name}</div>
-              ${project.description ? html`
-                <div class="project-description">${project.description}</div>
-              ` : ''}
+              <div class="project-name">${project.language} - ${project.book} - ${project.type}</div>
               <button class="info-btn" @click=${(e: Event) => this.openInfoModal(project, e)}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="10"></circle>
@@ -414,26 +441,41 @@ export class DashboardScreen extends LitElement {
             </div>
             <div class="modal-body">
               <div class="form-group">
-                <label class="form-label">${this.translations.dashboard.projectName}</label>
+                <label class="form-label">Language (e.g., en, ru, es)</label>
                 <input 
                   type="text" 
                   class="form-input"
-                  .placeholder=${this.translations.dashboard.namePlaceholder}
-                  .value=${this.newProjectName}
-                  @input=${(e: Event) => this.newProjectName = (e.target as HTMLInputElement).value}
+                  placeholder="a-z0-9-"
+                  .value=${this.newLanguage}
+                  @input=${(e: Event) => this.newLanguage = (e.target as HTMLInputElement).value.toLowerCase()}
                   @keydown=${(e: KeyboardEvent) => e.key === 'Enter' && this.createProject()}
                 />
-                ${this.error ? html`<div class="error-text">${this.error}</div>` : ''}
               </div>
               <div class="form-group">
-                <label class="form-label">${this.translations.dashboard.projectDescription}</label>
-                <textarea 
-                  class="form-input form-textarea"
-                  .placeholder=${this.translations.dashboard.descriptionPlaceholder}
-                  .value=${this.newProjectDescription}
-                  @input=${(e: Event) => this.newProjectDescription = (e.target as HTMLTextAreaElement).value}
-                ></textarea>
+                <label class="form-label">Book (exactly 3 chars)</label>
+                <input 
+                  type="text" 
+                  class="form-input"
+                  placeholder="a-z0-9 (3 chars)"
+                  maxlength="3"
+                  .value=${this.newBook}
+                  @input=${(e: Event) => this.newBook = (e.target as HTMLInputElement).value.toLowerCase()}
+                  @keydown=${(e: KeyboardEvent) => e.key === 'Enter' && this.createProject()}
+                />
               </div>
+              <div class="form-group">
+                <label class="form-label">Type</label>
+                <select 
+                  class="form-input"
+                  .value=${this.newType}
+                  @change=${(e: Event) => this.newType = (e.target as HTMLSelectElement).value}
+                >
+                  <option value="ulb">ULB</option>
+                  <option value="udb">UDB</option>
+                  <option value="reg">REG</option>
+                </select>
+              </div>
+              ${this.error ? html`<div class="error-text">${this.error}</div>` : ''}
             </div>
             <div class="modal-footer">
               <button class="secondary" @click=${this.closeCreateModal}>
@@ -460,13 +502,18 @@ export class DashboardScreen extends LitElement {
               </button>
             </div>
             <div class="modal-body">
-              <div class="form-label">${this.translations.dashboard.projectName}</div>
-              <div class="description-value">${this.selectedProject.name}</div>
-              
-              ${this.selectedProject.description ? html`
-                <div class="form-label">${this.translations.projectInfo.description}</div>
-                <div class="description-value">${this.selectedProject.description}</div>
-              ` : ''}
+              <div class="info-row">
+                <span class="info-label">language:</span>
+                <span class="info-value">${this.selectedProject.language}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">book:</span>
+                <span class="info-value">${this.selectedProject.book}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">type:</span>
+                <span class="info-value">${this.selectedProject.type.toUpperCase()}</span>
+              </div>
             </div>
             <div class="modal-footer">
               <button class="delete-btn" @click=${this.deleteProject}>
