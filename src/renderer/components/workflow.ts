@@ -1,8 +1,10 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, state, property} from 'lit/decorators.js';
-import {Project, FileItem, Translations} from '../types';
+import {Project, FileItem} from '../types';
+import {Translations} from '../i18n/en';
 import { baseStyles } from "../styles/base";
 import { fontStyles } from "../styles/fonts";
+import './file-card';
 import '@lit-labs/virtualizer';
 
 @customElement('workflow-screen')
@@ -218,8 +220,8 @@ export class WorkflowScreen extends LitElement {
     @state() private files: FileItem[] = [];
     @state() private loading = true;
     @state() private error = '';
-    @state() private editingFileId: number | null = null;
-    @state() private fileContents: Map<number, string> = new Map();
+    @state() private editingFileId: string | null = null;
+    @state() private fileContents: Map<string, string> = new Map();
 
     async connectedCallback() {
         super.connectedCallback();
@@ -258,30 +260,6 @@ export class WorkflowScreen extends LitElement {
         }
     }
 
-    private async toggleEdit(file: FileItem) {
-        if (this.editingFileId === file.id) {
-            // Save and exit edit mode
-            await this.saveFileContent(file);
-            this.editingFileId = null;
-        } else {
-            // Enter edit mode
-            if (!this.fileContents.has(file.id)) {
-                await this.loadFileContent(file);
-            }
-            this.editingFileId = file.id;
-
-            // Focus the textarea after render
-            requestAnimationFrame(() => {
-                const textarea = this.shadowRoot
-                    ?.querySelector(`textarea[data-file-id="${file.id}"]`) as HTMLTextAreaElement;
-                if (textarea) {
-                    textarea.focus();
-                    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-                }
-            });
-        }
-    }
-
     private async saveFileContent(file: FileItem) {
         const content = this.fileContents.get(file.id);
         if (content === undefined) return;
@@ -297,8 +275,47 @@ export class WorkflowScreen extends LitElement {
         }
     }
 
-    private handleContentChange(file: FileItem, e: Event) {
-        const content = (e.target as HTMLTextAreaElement).value;
+    private loadFileContent(file: FileItem) {
+        window.electronAPI.readFile(file.path).then(result => {
+            if (result.success && result.data !== undefined) {
+                this.fileContents = new Map(this.fileContents).set(file.id, result.data);
+            }
+        });
+    }
+
+    private handleToggleEdit(e: CustomEvent<{file: FileItem}>) {
+        console.log('toggle-edit event received', e.detail);
+        const {file} = e.detail;
+        if (this.editingFileId === file.id) {
+            // Save and exit edit mode
+            this.saveFileContent(file).then(() => {
+                this.editingFileId = null;
+            });
+        } else {
+            // Enter edit mode
+            if (!this.fileContents.has(file.id)) {
+                this.loadFileContent(file);
+            }
+            this.editingFileId = file.id;
+
+            // Focus the textarea after render
+            requestAnimationFrame(() => {
+                this.updateComplete.then(() => {
+                    const fileCard = this.shadowRoot
+                        ?.querySelector(`file-card[file-id="${file.id}"]`);
+                    const textarea = fileCard?.shadowRoot
+                        ?.querySelector(`textarea[data-file-id="${file.id}"]`) as HTMLTextAreaElement;
+                    if (textarea) {
+                        textarea.focus();
+                        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+                    }
+                });
+            });
+        }
+    }
+
+    private handleContentChange(e: CustomEvent<{file: FileItem; content: string}>) {
+        const {file, content} = e.detail;
         this.fileContents = new Map(this.fileContents).set(file.id, content);
     }
 
@@ -334,38 +351,14 @@ export class WorkflowScreen extends LitElement {
                         <lit-virtualizer
                                 .items=${this.files}
                                 .renderItem=${(file: FileItem) => html`
-                                    <div class="file-item">
-                                        <div class="file-header">
-                                            <span class="file-name">${file.name}</span>
-                                            <div class="file-actions">
-                                                <button
-                                                        class="icon-btn ${this.editingFileId === file.id ? 'active' : ''}"
-                                                        @click=${() => this.toggleEdit(file)}
-                                                        title="${this.editingFileId === file.id ? 'Save' : 'Edit'}"
-                                                >
-                                                    ${this.editingFileId === file.id ? html`
-                                                        <span class="material-icons">check</span>
-                                                    ` : html`
-                                                        <span class="material-icons">edit</span>
-                                                    `}
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div class="file-content">
-                                            ${this.editingFileId === file.id ? html`
-                                                <textarea
-                                                        class="content-edit"
-                                                        data-file-id="${file.id}"
-                                                        .value=${this.fileContents.get(file.id) || ''}
-                                                        @input=${(e: Event) => this.handleContentChange(file, e)}
-                                                ></textarea>
-                                            ` : html`
-                                                <div class="content-view">
-                                                    ${this.fileContents.get(file.id) || ''}
-                                                </div>
-                                            `}
-                                        </div>
-                                    </div>
+                                    <file-card
+                                            file-id="${file.id}"
+                                            .file=${file}
+                                            .isEditing=${this.editingFileId === file.id}
+                                            .content=${this.fileContents.get(file.id) || ''}
+                                            @toggle-edit=${(e: CustomEvent) => this.handleToggleEdit(e)}
+                                            @content-change=${(e: CustomEvent) => this.handleContentChange(e)}
+                                    ></file-card>
                                 `}
                         ></lit-virtualizer>
                     </div>
