@@ -36,7 +36,7 @@ export async function initDatabase(): Promise<void> {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       language TEXT NOT NULL,
       book TEXT NOT NULL,
-      type TEXT NOT NULL,
+      resource TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -63,22 +63,23 @@ export function closeDatabase(): void {
 }
 
 // Project operations
-export function createProject(language: string, book: string, type: string): any {
+export function createProject(language: string, book: string, resource: string): any {
   const db = getDatabase();
-  // Generate folder name as language_book_text_type
-  const folderName = `${language}_${book}_text_${type}`;
-  const stmt = db.prepare('INSERT INTO projects (language, book, type) VALUES (?, ?, ?)');
-  const result = stmt.run(language, book, type);
-  return { id: result.lastInsertRowid, language, book, type, name: folderName };
+  // Generate folder name as language_book_text_resource
+  const folderName = `${language}_${book}_text_${resource}`;
+  const stmt = db.prepare('INSERT INTO projects (language, book, resource) VALUES (?, ?, ?)');
+  const result = stmt.run(language, book, resource);
+  return { id: result.lastInsertRowid, language, book, type: resource, name: folderName };
 }
 
 export function getAllProjects(): any[] {
   const db = getDatabase();
-  const projects = db.prepare('SELECT * FROM projects ORDER BY language ASC, book ASC, type ASC').all();
-  // Add name property for folder access
+  const projects = db.prepare('SELECT * FROM projects ORDER BY language ASC, book ASC, resource ASC').all();
+  // Add name and type (for compatibility) properties
   return projects.map((p: any) => ({
     ...p,
-    name: `${p.language}_${p.book}_text_${p.type}`
+    type: p.resource,
+    name: `${p.language}_${p.book}_text_${p.resource}`
   }));
 }
 
@@ -86,17 +87,19 @@ export function getProject(id: number): any {
   const db = getDatabase();
   const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(id) as any;
   if (project) {
-    project.name = `${project.language}_${project.book}_text_${project.type}`;
+    project.type = project.resource;
+    project.name = `${project.language}_${project.book}_text_${project.resource}`;
   }
   return project;
 }
 
-export function getProjectByLanguageBookType(language: string, book: string, type: string): any {
+export function getProjectByLanguageBookType(language: string, book: string, resource: string): any {
   const db = getDatabase();
-  const project = db.prepare('SELECT * FROM projects WHERE language = ? AND book = ? AND type = ?')
-    .get(language, book, type) as any;
+  const project = db.prepare('SELECT * FROM projects WHERE language = ? AND book = ? AND resource = ?')
+    .get(language, book, resource) as any;
   if (project) {
-    project.name = `${project.language}_${project.book}_text_${project.type}`;
+    project.type = project.resource;
+    project.name = `${project.language}_${project.book}_text_${project.resource}`;
   }
   return project;
 }

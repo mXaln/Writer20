@@ -25,6 +25,33 @@ export function setupIpcHandlers(): void {
         log.info(`Created project folder: ${superFilesPath}`);
       }
 
+      // Create manifest.json file
+      const manifest = {
+        package_version: 1,
+        format: "usfm",
+        generator: {
+          name: "superfiles",
+          build: "1"
+        },
+        target_language: {
+          id: language
+        },
+        project: {
+          id: book
+        },
+        type: {
+          id: "text",
+          name: "Text"
+        },
+        resource: {
+          id: type,
+          name: type
+        }
+      };
+      const manifestPath = path.join(superFilesPath, 'manifest.json');
+      fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+      log.info(`Created manifest.json: ${manifestPath}`);
+
       return { success: true, data: project };
     } catch (error: any) {
       log.error('Error creating project:', error);
@@ -171,6 +198,35 @@ export function setupIpcHandlers(): void {
       // Extract ZIP file
       const extract = require('extract-zip');
       await extract(zipPath, { dir: projectFolder });
+      
+      // Create manifest.json if it doesn't exist
+      const manifestPath = path.join(projectFolder, 'manifest.json');
+      if (!fs.existsSync(manifestPath)) {
+        const manifest = {
+          package_version: 1,
+          format: "usfm",
+          generator: {
+            name: "superfiles",
+            build: "1"
+          },
+          target_language: {
+            id: language
+          },
+          project: {
+            id: book
+          },
+          type: {
+            id: "text",
+            name: "Text"
+          },
+          resource: {
+            id: type,
+            name: type
+          }
+        };
+        fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+        log.info(`Created manifest.json: ${manifestPath}`);
+      }
       
       log.info(`Imported project ${fileName} from ${zipPath}`);
       

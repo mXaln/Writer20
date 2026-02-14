@@ -464,7 +464,7 @@ export class DashboardScreen extends LitElement {
                 />
               </div>
               <div class="form-group">
-                <label class="form-label">Type</label>
+                <label class="form-label">Resource</label>
                 <select 
                   class="form-input"
                   .value=${this.newType}
@@ -511,7 +511,7 @@ export class DashboardScreen extends LitElement {
                 <span class="info-value">${this.selectedProject.book}</span>
               </div>
               <div class="info-row">
-                <span class="info-label">type:</span>
+                <span class="info-label">resource:</span>
                 <span class="info-value">${this.selectedProject.type.toUpperCase()}</span>
               </div>
             </div>
