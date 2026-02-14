@@ -1,6 +1,7 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {localized, msg} from '@lit/localize';
+import {allLocales} from "../i18n/locale-codes";
 import {Theme, Language} from '../types';
 import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
@@ -220,6 +221,7 @@ export class SettingsScreen extends LitElement {
                         <div class="select-wrapper">
                             <select .value=${this.language} @change=${this.handleLanguageChange}>
                                 <option value="en">${msg('English')}</option>
+                                <option value="es-419">${msg('Spanish')}</option>
                                 <option value="ru">${msg('Russian')}</option>
                             </select>
                             <span class="select-arrow">
