@@ -1,9 +1,9 @@
 {
-  "name": "superfiles",
+  "name": "writer20",
   "version": "1.0.0",
-  "description": "Desktop File Management Application with Electron and Lit",
+  "description": "Desktop Translations Management Application with Electron and Lit",
   "main": "dist/main/main/index.js",
-  "author": "SuperFiles",
+  "author": "mXaln",
   "license": "MIT",
   "scripts": {
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
@@ -41,8 +41,8 @@
     "wait-on": "^9.0.4"
   },
   "build": {
-    "appId": "com.superfiles.app",
-    "productName": "SuperFiles",
+    "appId": "com.writer20.app",
+    "productName": "Writer20",
     "directories": {
       "output": "release"
     },

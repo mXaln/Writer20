@@ -13,7 +13,7 @@ export function setupFileHandlers(): void {
         return { success: false, error: 'Project not found' };
       }
 
-      const projectFolder = path.join(app.getPath('home'), 'SuperFiles', project.name);
+      const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
       const contentsFolder = path.join(projectFolder, 'contents');
       
       // Create contents folder if it doesn't exist
@@ -108,7 +108,7 @@ export function setupFileHandlers(): void {
         return { success: false, error: 'Project not found' };
       }
 
-      const projectFolder = path.join(app.getPath('home'), 'SuperFiles', project.name);
+      const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
       const contentsFolder = path.join(projectFolder, 'contents');
       
       if (!fs.existsSync(contentsFolder)) {
@@ -139,7 +139,7 @@ export function setupFileHandlers(): void {
         return { success: false, error: 'Project not found' };
       }
 
-      const projectFolder = path.join(app.getPath('home'), 'SuperFiles', project.name);
+      const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
       const contentsFolder = path.join(projectFolder, 'contents');
       
       // Ensure contents folder exists

@@ -2,7 +2,7 @@ import {Translations} from "./locales";
 
 export const ru: Translations = {
     app: {
-        name: 'SuperFiles',
+        name: 'Writer20',
     },
     nav: {
         dashboard: 'Главная',

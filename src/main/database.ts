@@ -22,7 +22,7 @@ export async function initDatabase(): Promise<void> {
     fs.mkdirSync(dbDir, { recursive: true });
   }
 
-  const dbPath = path.join(dbDir, 'superfiles.db');
+  const dbPath = path.join(dbDir, 'writer20.db');
   log.info(`Database path: ${dbPath}`);
 
   db = new Database(dbPath);

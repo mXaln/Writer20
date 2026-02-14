@@ -18,11 +18,11 @@ export function setupProjectHandlers(): void {
       const project = db.createProject(language, book, type);
       log.info(`Creating project: ${project.name}`);
       
-      // Create project folder in ~/SuperFiles using project.name
-      const superFilesPath = path.join(app.getPath('home'), 'SuperFiles', project.name);
-      if (!fs.existsSync(superFilesPath)) {
-        fs.mkdirSync(superFilesPath, { recursive: true });
-        log.info(`Created project folder: ${superFilesPath}`);
+      // Create project folder in ~/Writer20 using project.name
+      const appPath = path.join(app.getPath('home'), 'Writer20', project.name);
+      if (!fs.existsSync(appPath)) {
+        fs.mkdirSync(appPath, { recursive: true });
+        log.info(`Created project folder: ${appPath}`);
       }
 
       // Create manifest.json file
@@ -30,7 +30,7 @@ export function setupProjectHandlers(): void {
         package_version: 1,
         format: "usfm",
         generator: {
-          name: "superfiles",
+          name: "writer20",
           build: "1"
         },
         target_language: {
@@ -48,17 +48,17 @@ export function setupProjectHandlers(): void {
           name: type
         }
       };
-      const manifestPath = path.join(superFilesPath, 'manifest.json');
+      const manifestPath = path.join(appPath, 'manifest.json');
       fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
       log.info(`Created manifest.json: ${manifestPath}`);
 
       // Initialize git repository
       try {
-        const git = simpleGit(superFilesPath);
+        const git = simpleGit(appPath);
         await git.init();
         await git.add('.');
         await git.commit('Initial commit');
-        log.info(`Initialized git repository: ${superFilesPath}`);
+        log.info(`Initialized git repository: ${appPath}`);
       } catch (gitError: any) {
         log.error(`Git init error: ${gitError.message}`);
       }
@@ -101,10 +101,10 @@ export function setupProjectHandlers(): void {
       }
 
       // Delete project folder
-      const superFilesPath = path.join(app.getPath('home'), 'SuperFiles', project.name);
-      if (fs.existsSync(superFilesPath)) {
-        fs.rmSync(superFilesPath, { recursive: true, force: true });
-        log.info(`Deleted project folder: ${superFilesPath}`);
+      const appPath = path.join(app.getPath('home'), 'Writer20', project.name);
+      if (fs.existsSync(appPath)) {
+        fs.rmSync(appPath, { recursive: true, force: true });
+        log.info(`Deleted project folder: ${appPath}`);
       }
 
       db.deleteProject(id);
@@ -122,7 +122,7 @@ export function setupProjectHandlers(): void {
         return { success: false, error: 'Project not found' };
       }
 
-      const projectFolder = path.join(app.getPath('home'), 'SuperFiles', project.name);
+      const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
       if (!fs.existsSync(projectFolder)) {
         return { success: false, error: 'Project folder not found' };
       }
@@ -180,7 +180,7 @@ export function setupProjectHandlers(): void {
       const zipPath = result.filePaths[0];
       
       // Create temp folder for extraction
-      const tempFolder = path.join(app.getPath('temp'), `superfiles-import-${Date.now()}`);
+      const tempFolder = path.join(app.getPath('temp'), `writer20-import-${Date.now()}`);
       fs.mkdirSync(tempFolder, { recursive: true });
 
       // Extract ZIP file
@@ -220,7 +220,7 @@ export function setupProjectHandlers(): void {
       const project = db.createProject(language, book, resource);
       
       // Create project folder
-      const projectFolder = path.join(app.getPath('home'), 'SuperFiles', project.name);
+      const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
       if (!fs.existsSync(projectFolder)) {
         fs.mkdirSync(projectFolder, { recursive: true });
       }
@@ -262,7 +262,7 @@ export function setupProjectHandlers(): void {
         package_version: 1,
         format: "usfm",
         generator: {
-          name: "superfiles",
+          name: "writer20",
           build: "1"
         },
         target_language: {

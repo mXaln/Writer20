@@ -1,9 +1,9 @@
-# SuperFiles - Electron + Lit 3 Application Specification
+# Writer20 - Electron + Lit 3 Application Specification
 
 ## 1. Project Overview
 
 ### Project Name
-**SuperFiles** - Desktop File Management Application
+**Writer20** - Desktop File Management Application
 
 ### Project Type
 Cross-platform desktop application built with Electron and Lit 3 web components
@@ -260,8 +260,8 @@ electron-lit/
 1. **Create Project**
    - Input: Name (required), Description (optional)
    - Validation: Name must be unique
-   - Action: Create database record, create project folder in ~/SuperFiles
-   - Folder structure: ~/SuperFiles/{project-name}/
+   - Action: Create database record, create project folder in ~/Writer20
+   - Folder structure: ~/Writer20/{project-name}/
 
 2. **List Projects**
    - Sort: Alphabetical by name (ascending)
@@ -277,7 +277,7 @@ electron-lit/
 1. **Add Files**
    - Trigger: Click "Add Files" button
    - Action: Open native file dialog (multi-select enabled)
-   - Process: Copy selected files to ~/SuperFiles/{project-name}/
+   - Process: Copy selected files to ~/Writer20/{project-name}/
    - Database: Create file records with name and path
    - UI: Update file list
 
@@ -322,7 +322,7 @@ electron-lit/
    - Name unique
 7. If valid:
    - Create database record
-   - Create folder ~/SuperFiles/{name}/
+   - Create folder ~/Writer20/{name}/
    - Add project to list
    - Close modal
 8. If invalid:
@@ -337,7 +337,7 @@ electron-lit/
 3. Native file dialog opens (multi-select)
 4. User selects one or more files
 5. For each file:
-   - Copy to ~/SuperFiles/{project-name}/
+   - Copy to ~/Writer20/{project-name}/
    - Create database record
 6. File list updates with new files
 ```
@@ -471,7 +471,7 @@ electron-lit/
 
 ### 6.2 File Management
 - [ ] User can add files from file system
-- [ ] Files are copied to ~/SuperFiles/{project-name}/
+- [ ] Files are copied to ~/Writer20/{project-name}/
 - [ ] Clicking file opens it with system default app
 - [ ] User can remove files from project
 - [ ] File list shows current files in project
@@ -527,6 +527,6 @@ electron-lit/
 - Native module (better-sqlite3) requires rebuild for Electron
 
 ### File Storage Location
-- User files: `~/SuperFiles/{project-name}/`
-- Database: `~/.superfiles/data.db`
-- Logs: `~/.superfiles/logs/`
+- User files: `~/Writer20/{project-name}/`
+- Database: `~/.config/writer20/data.db`
+- Logs: `~/.config/writer20/logs/`
