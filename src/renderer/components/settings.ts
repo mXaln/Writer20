@@ -6,6 +6,7 @@ import {Theme, Language} from '../types';
 import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
 
+
 @customElement('settings-screen')
 @localized()
 export class SettingsScreen extends LitElement {
@@ -153,6 +154,15 @@ export class SettingsScreen extends LitElement {
     @property({type: String}) theme: Theme = 'system';
     @property({type: String}) language: Language = 'en';
 
+    private getLocaleNames(locale: string) {
+        const locales: Record<string, string> = {
+            'en': msg('English'),
+            'es-419': msg('Spanish'),
+            'ru': msg('Russian'),
+        };
+        return locales[locale];
+    }
+
     private handleThemeChange(newTheme: Theme) {
         this.dispatchEvent(new CustomEvent('theme-change', {
             detail: {theme: newTheme}
@@ -220,9 +230,9 @@ export class SettingsScreen extends LitElement {
                         <span class="setting-label">${msg('Language')}</span>
                         <div class="select-wrapper">
                             <select .value=${this.language} @change=${this.handleLanguageChange}>
-                                <option value="en">${msg('English')}</option>
-                                <option value="es-419">${msg('Spanish')}</option>
-                                <option value="ru">${msg('Russian')}</option>
+                                ${allLocales.map(locale => html`
+                                    <option value=${locale}>${this.getLocaleNames(locale) || locale}</option>
+                                `)}
                             </select>
                             <span class="select-arrow">
                                 <span class="material-icons">arrow_drop_down</span>

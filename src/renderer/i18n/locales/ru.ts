@@ -40,7 +40,7 @@
 'sdc673e73b5c13aea': `Удалить`,
 'sefcf950b3cc4fc3b': `Язык`,
 'sf0e261e04eda82ff': `Внешний вид`,
+'sf1868dc19e3917bb': `Испанский`,
 'sf7bdcea7c8207cb8': `Книга`,
-'sf1868dc19e3917bb': `Spanish`,
     };
   
