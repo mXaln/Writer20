@@ -21,23 +21,23 @@
   "dependencies": {
     "@lit-labs/virtualizer": "^2.1.1",
     "archiver": "^7.0.1",
-    "better-sqlite3": "^9.2.2",
-    "electron-log": "^5.0.1",
+    "better-sqlite3": "^12.6.2",
+    "electron-log": "^5.4.3",
     "extract-zip": "^2.0.1",
-    "simple-git": "^3.30.0"
+    "simple-git": "^3.31.1"
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.29.0",
     "@types/archiver": "^7.0.0",
-    "@types/better-sqlite3": "^7.6.8",
-    "concurrently": "^8.2.2",
-    "electron": "^28.1.0",
-    "electron-builder": "^24.9.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "concurrently": "^9.2.1",
+    "electron": "^40.4.1",
+    "electron-builder": "^26.7.0",
     "electron-rebuild": "^3.2.9",
-    "lit": "^3.1.0",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.10",
-    "wait-on": "^7.2.0"
+    "lit": "^3.3.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "wait-on": "^9.0.4"
   },
   "build": {
     "appId": "com.superfiles.app",
