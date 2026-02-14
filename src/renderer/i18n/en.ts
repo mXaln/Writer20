@@ -65,7 +65,7 @@ export const en: Translations = {
         databaseError: 'Database error occurred',
         invalidLanguage: 'Language must be lowercase letters, numbers, or hyphens only',
         invalidBook: 'Book must be exactly 3 lowercase letters or numbers',
-        invalidType: 'Type must be 1-3 lowercase letters or numbers',
+        invalidResource: 'Resource must be 1-3 lowercase letters or numbers',
         failedToExport: 'Failed to export project',
         failedToDelete: 'Failed to delete project',
         failedToSave: 'Failed to save file',

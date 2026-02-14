@@ -210,7 +210,7 @@ export class DashboardScreen extends LitElement {
         // Validate type: lowercase, a-z0-9, max 3 characters
         const typeRegex = /^[a-z0-9]{1,3}$/;
         if (!this.newType.trim() || !typeRegex.test(this.newType)) {
-            this.error = this.translations.errors.invalidType;
+            this.error = this.translations.errors.invalidResource;
             return;
         }
 

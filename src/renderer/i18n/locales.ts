@@ -67,7 +67,7 @@ export interface Translations {
     databaseError: string;
     invalidLanguage: string;
     invalidBook: string;
-    invalidType: string;
+    invalidResource: string;
     failedToExport: string;
     failedToDelete: string;
     failedToSave: string;

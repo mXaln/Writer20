@@ -1,4 +1,5 @@
 import { css } from 'lit';
+import {Theme} from "../types";
 
 export const lightTheme = css`
   :host {
