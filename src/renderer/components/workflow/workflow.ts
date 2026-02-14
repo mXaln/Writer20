@@ -1,7 +1,7 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, state, property} from 'lit/decorators.js';
 import {Project, FileItem} from '../../types';
-import {Translations} from '../../i18n/en';
+import {Translations} from '../../i18n/locales';
 import { baseStyles } from "../../styles/base";
 import { fontStyles } from "../../styles/fonts";
 import './file-card';

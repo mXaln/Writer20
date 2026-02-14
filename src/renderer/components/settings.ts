@@ -1,8 +1,9 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {Theme, Language} from '../types';
-import { baseStyles } from "../styles/base";
-import { fontStyles } from "../styles/fonts";
+import {baseStyles} from "../styles/base";
+import {fontStyles} from "../styles/fonts";
+import {Translations} from "../i18n/locales";
 
 @customElement('settings-screen')
 export class SettingsScreen extends LitElement {

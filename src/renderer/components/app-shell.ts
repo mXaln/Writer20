@@ -3,7 +3,7 @@ import {customElement, state} from 'lit/decorators.js';
 import {getThemeCSS, getEffectiveTheme} from '../styles/theme';
 import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
-import {getTranslations, Translations} from '../i18n/en';
+import {getTranslations, Translations} from '../i18n/locales';
 import {Theme, Language} from '../types';
 
 type Screen = 'dashboard' | 'workflow' | 'settings';

@@ -57,7 +57,7 @@ electron-lit/
 │   │   │   └── settings-service.ts
 │   │   ├── i18n/                # Localization
 │   │   │   ├── index.ts
-│   │   │   ├── en.ts
+│   │   │   ├── locales.ts
 │   │   │   └── ru.ts
 │   │   ├── styles/              # Global styles
 │   │   │   ├── theme.ts         # Theme definitions
@@ -304,7 +304,7 @@ electron-lit/
    - Apply: Immediate UI update
 
 2. **Language Selection**
-   - Options: English (en), Russian (ru)
+   - Options: English (locales), Russian (ru)
    - Persistence: Save to SQLite
    - Apply: Immediate UI text update
 
@@ -401,7 +401,7 @@ electron-lit/
 ## 5. Internationalization (i18n)
 
 ### Supported Languages
-- English (en) - Default
+- English (locales) - Default
 - Russian (ru)
 
 ### Translation Keys Structure
