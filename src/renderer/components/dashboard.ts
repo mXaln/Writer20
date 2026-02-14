@@ -14,12 +14,39 @@ export class DashboardScreen extends LitElement {
       justify-content: space-between;
       align-items: center;
       margin-bottom: 24px;
+      position: relative;
+      min-height: 40px;
     }
 
     .title {
       font-size: 24px;
       font-weight: 600;
       color: var(--text-primary);
+    }
+
+    .fab {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      transition: all 200ms ease-in-out;
+    }
+
+    .fab:hover {
+      background-color: var(--primary-hover);
+      transform: scale(1.05);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
     }
 
     .projects-grid {
@@ -344,8 +371,8 @@ export class DashboardScreen extends LitElement {
     return html`
       <div class="header">
         <h1 class="title">${this.translations.dashboard.title}</h1>
-        <button class="primary" @click=${this.openCreateModal}>
-          + ${this.translations.dashboard.newProject}
+        <button class="fab" @click=${this.openCreateModal}>
+          +
         </button>
       </div>
 
