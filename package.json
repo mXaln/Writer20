@@ -64,12 +64,20 @@
       "icon": "resources/icon.png"
     },
     "mac": {
-      "target": "dmg",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["universal"]
+        }
+      ],
       "icon": "resources/icon.png"
     },
     "linux": {
-      "target": "AppImage",
-      "icon": "resources/icon.png"
+      "target": [
+        "deb"
+      ],
+      "icon": "resources/icon.png",
+      "arch": ["amd64"]
     },
     "nsis": {
       "oneClick": false,
