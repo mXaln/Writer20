@@ -37,8 +37,11 @@ declare global {
       listProjects: () => Promise<IpcResult<Project[]>>;
       getProject: (id: number) => Promise<IpcResult<Project>>;
       deleteProject: (id: number) => Promise<IpcResult>;
+      exportProject: (id: number) => Promise<IpcResult<string | null>>;
       addFiles: (projectId: number) => Promise<IpcResult<FileItem[]>>;
       createFile: (projectId: number) => Promise<IpcResult<FileItem>>;
+      readFile: (filePath: string) => Promise<IpcResult<string>>;
+      writeFile: (filePath: string, content: string) => Promise<IpcResult>;
       listFiles: (projectId: number) => Promise<IpcResult<FileItem[]>>;
       openFile: (filePath: string) => Promise<IpcResult>;
       removeFile: (id: number, deleteFromDisk: boolean) => Promise<IpcResult>;

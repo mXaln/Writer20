@@ -19,11 +19,13 @@
     "package:linux": "npm run build && electron-builder --linux"
   },
   "dependencies": {
+    "archiver": "^7.0.1",
     "better-sqlite3": "^9.2.2",
     "electron-log": "^5.0.1"
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.29.0",
+    "@types/archiver": "^7.0.0",
     "@types/better-sqlite3": "^7.6.8",
     "concurrently": "^8.2.2",
     "electron": "^28.1.0",

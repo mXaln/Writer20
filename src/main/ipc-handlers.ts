@@ -87,6 +87,55 @@ export function setupIpcHandlers(): void {
     }
   });
 
+  ipcMain.handle('project:export', async (_event, id: number) => {
+    try {
+      const project = db.getProject(id);
+      if (!project) {
+        return { success: false, error: 'Project not found' };
+      }
+
+      const projectFolder = path.join(app.getPath('home'), 'SuperFiles', project.name);
+      if (!fs.existsSync(projectFolder)) {
+        return { success: false, error: 'Project folder not found' };
+      }
+
+      // Show save dialog
+      const result = await dialog.showSaveDialog({
+        title: 'Export Project as ZIP',
+        defaultPath: `${project.name}.zip`,
+        filters: [{ name: 'ZIP Files', extensions: ['zip'] }]
+      });
+
+      if (result.canceled || !result.filePath) {
+        return { success: true, data: null };
+      }
+
+      // Create zip file
+      const archiver = require('archiver');
+      const output = fs.createWriteStream(result.filePath);
+      const archive = archiver('zip', { zlib: { level: 9 } });
+
+      return new Promise((resolve) => {
+        output.on('close', () => {
+          log.info(`Exported project ${project.name} to ${result.filePath}`);
+          resolve({ success: true, data: result.filePath });
+        });
+
+        archive.on('error', (err: any) => {
+          log.error('Error creating zip:', err);
+          resolve({ success: false, error: err.message });
+        });
+
+        archive.pipe(output);
+        archive.directory(projectFolder, false);
+        archive.finalize();
+      });
+    } catch (error: any) {
+      log.error('Error exporting project:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
   // File handlers
   ipcMain.handle('file:add', async (_event, projectId: number) => {
     try {
@@ -169,6 +218,30 @@ export function setupIpcHandlers(): void {
       return { success: true, data: file };
     } catch (error: any) {
       log.error('Error creating file:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('file:read', async (_event, filePath: string) => {
+    try {
+      if (!fs.existsSync(filePath)) {
+        return { success: false, error: 'File not found' };
+      }
+      const content = fs.readFileSync(filePath, 'utf-8');
+      return { success: true, data: content };
+    } catch (error: any) {
+      log.error('Error reading file:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('file:write', async (_event, filePath: string, content: string) => {
+    try {
+      fs.writeFileSync(filePath, content, 'utf-8');
+      log.info(`Saved file: ${filePath}`);
+      return { success: true };
+    } catch (error: any) {
+      log.error('Error writing file:', error);
       return { success: false, error: error.message };
     }
   });

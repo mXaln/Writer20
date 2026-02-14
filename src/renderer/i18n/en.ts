@@ -83,6 +83,9 @@ const en: Translations = {
     files: 'files',
     close: 'Close',
     description: 'Description',
+    delete: 'Delete',
+    exportProject: 'Export Project',
+    deleteConfirm: 'Are you sure you want to delete',
   },
   workflow: {
     back: 'Back',
@@ -140,6 +143,9 @@ const ru: Translations = {
     files: 'файлов',
     close: 'Закрыть',
     description: 'Описание',
+    delete: 'Удалить',
+    exportProject: 'Экспорт проекта',
+    deleteConfirm: 'Вы уверены, что хотите удалить',
   },
   workflow: {
     back: 'Назад',

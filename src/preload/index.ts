@@ -12,12 +12,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('project:get', id),
   deleteProject: (id: number) =>
     ipcRenderer.invoke('project:delete', id),
+  exportProject: (id: number) =>
+    ipcRenderer.invoke('project:export', id),
 
   // File operations
   addFiles: (projectId: number) =>
     ipcRenderer.invoke('file:add', projectId),
   createFile: (projectId: number) =>
     ipcRenderer.invoke('file:create', projectId),
+  readFile: (filePath: string) =>
+    ipcRenderer.invoke('file:read', filePath),
+  writeFile: (filePath: string, content: string) =>
+    ipcRenderer.invoke('file:write', filePath, content),
   listFiles: (projectId: number) =>
     ipcRenderer.invoke('file:list', projectId),
   openFile: (filePath: string) =>

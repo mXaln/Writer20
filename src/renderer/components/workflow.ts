@@ -66,38 +66,20 @@ export class WorkflowScreen extends LitElement {
       font-weight: 600;
     }
 
-    .files-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .files-table th {
-      text-align: left;
-      padding: 12px 16px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      background-color: var(--bg-secondary);
+    .file-item {
       border-bottom: 1px solid var(--border);
     }
 
-    .files-table td {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .files-table tr {
-      cursor: pointer;
-      transition: background-color 200ms ease-in-out;
-    }
-
-    .files-table tbody tr:hover {
-      background-color: var(--bg-secondary);
-    }
-
-    .files-table tbody tr:last-child td {
+    .file-item:last-child {
       border-bottom: none;
+    }
+
+    .file-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
     }
 
     .file-name {
@@ -105,37 +87,70 @@ export class WorkflowScreen extends LitElement {
       color: var(--text-primary);
     }
 
-    .file-path {
-      font-size: 12px;
-      color: var(--text-secondary);
-      max-width: 400px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .actions {
+    .file-actions {
       display: flex;
       gap: 8px;
     }
 
-    .action-btn {
-      padding: 6px 12px;
-      font-size: 12px;
-      border-radius: 4px;
+    .icon-btn {
+      background: none;
+      border: none;
+      padding: 6px;
       cursor: pointer;
+      color: var(--text-secondary);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: all 200ms ease-in-out;
     }
 
-    .action-btn.remove {
-      background-color: transparent;
-      border: 1px solid var(--error);
-      color: var(--error);
+    .icon-btn:hover {
+      background-color: var(--bg-secondary);
+      color: var(--primary);
     }
 
-    .action-btn.remove:hover {
-      background-color: var(--error);
-      color: white;
+    .icon-btn.active {
+      color: var(--primary);
+    }
+
+    .file-content {
+      padding: 0 16px 16px 16px;
+    }
+
+    .content-view {
+      padding: 12px;
+      background-color: var(--bg-secondary);
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 13px;
+      white-space: pre-line;
+      word-break: break-word;
+      color: var(--text-primary);
+      max-height: 300px;
+      overflow-y: auto;
+      margin: 0;
+    }
+
+    .content-edit {
+      width: 100%;
+      min-height: 150px;
+      padding: 12px;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--primary);
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 13px;
+      white-space: pre-line;
+      word-break: break-word;
+      color: var(--text-primary);
+      resize: vertical;
+      outline: none;
+      margin: 0;
+    }
+
+    .content-edit:focus {
+      border-color: var(--primary-hover);
     }
 
     .empty-state {
@@ -183,6 +198,8 @@ export class WorkflowScreen extends LitElement {
   @state() private files: FileItem[] = [];
   @state() private loading = true;
   @state() private error = '';
+  @state() private editingFileId: number | null = null;
+  @state() private fileContents: Map<number, string> = new Map();
 
   async connectedCallback() {
     super.connectedCallback();
@@ -207,6 +224,12 @@ export class WorkflowScreen extends LitElement {
       const result = await window.electronAPI.listFiles(this.projectId);
       if (result.success && result.data) {
         this.files = result.data;
+        // Load content for all files
+        for (const file of this.files) {
+          if (!this.fileContents.has(file.id)) {
+            await this.loadFileContent(file);
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to load files:', error);
@@ -229,30 +252,49 @@ export class WorkflowScreen extends LitElement {
     }
   }
 
-  private async openFile(file: FileItem) {
+  private async loadFileContent(file: FileItem) {
     try {
-      const result = await window.electronAPI.openFile(file.path);
-      if (!result.success) {
-        this.showError(result.error || this.translations.workflow.fileNotFound);
+      const result = await window.electronAPI.readFile(file.path);
+      if (result.success && result.data !== undefined) {
+        this.fileContents = new Map(this.fileContents).set(file.id, result.data);
       }
     } catch (error) {
-      console.error('Failed to open file:', error);
-      this.showError(this.translations.workflow.fileNotFound);
+      console.error('Failed to load file content:', error);
     }
   }
 
-  private async removeFile(file: FileItem) {
+  private async toggleEdit(file: FileItem) {
+    if (this.editingFileId === file.id) {
+      // Save and exit edit mode
+      await this.saveFileContent(file);
+      this.editingFileId = null;
+    } else {
+      // Enter edit mode
+      if (!this.fileContents.has(file.id)) {
+        await this.loadFileContent(file);
+      }
+      this.editingFileId = file.id;
+    }
+  }
+
+  private async saveFileContent(file: FileItem) {
+    const content = this.fileContents.get(file.id);
+    if (content === undefined) return;
+
     try {
-      const result = await window.electronAPI.removeFile(file.id, false);
-      if (result.success) {
-        await this.loadFiles();
-      } else {
-        this.showError(result.error || 'Failed to remove file');
+      const result = await window.electronAPI.writeFile(file.path, content);
+      if (!result.success) {
+        this.showError(result.error || 'Failed to save file');
       }
     } catch (error) {
-      console.error('Failed to remove file:', error);
-      this.showError('Failed to remove file');
+      console.error('Failed to save file:', error);
+      this.showError('Failed to save file');
     }
+  }
+
+  private handleContentChange(file: FileItem, e: Event) {
+    const content = (e.target as HTMLTextAreaElement).value;
+    this.fileContents = new Map(this.fileContents).set(file.id, content);
   }
 
   private showError(message: string) {
@@ -300,28 +342,46 @@ export class WorkflowScreen extends LitElement {
             ${this.translations.workflow.noFiles}
           </div>
         ` : html`
-          <table class="files-table">
-            <thead>
-              <tr>
-                <th>${this.translations.workflow.fileName}</th>
-                <th>${this.translations.workflow.filePath}</th>
-                <th>${this.translations.workflow.actions}</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${this.files.map(file => html`
-                <tr @click=${() => this.openFile(file)}>
-                  <td class="file-name">${file.name}</td>
-                  <td class="file-path" title="${file.path}">${file.path}</td>
-                  <td class="actions" @click=${(e: Event) => e.stopPropagation()}>
-                    <button class="action-btn remove" @click=${() => this.removeFile(file)}>
-                      ${this.translations.workflow.removeFile}
+          <div class="files-list">
+            ${this.files.map(file => html`
+              <div class="file-item">
+                <div class="file-header">
+                  <span class="file-name">${file.name}</span>
+                  <div class="file-actions">
+                    <button 
+                      class="icon-btn ${this.editingFileId === file.id ? 'active' : ''}"
+                      @click=${() => this.toggleEdit(file)}
+                      title="${this.editingFileId === file.id ? 'Save' : 'Edit'}"
+                    >
+                      ${this.editingFileId === file.id ? html`
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      ` : html`
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                      `}
                     </button>
-                  </td>
-                </tr>
-              `)}
-            </tbody>
-          </table>
+                  </div>
+                </div>
+                <div class="file-content">
+                  ${this.editingFileId === file.id ? html`
+                    <textarea
+                      class="content-edit"
+                      .value=${this.fileContents.get(file.id) || ''}
+                      @input=${(e: Event) => this.handleContentChange(file, e)}
+                    ></textarea>
+                  ` : html`
+                    <div class="content-view">
+                      ${this.fileContents.get(file.id) || '(empty)'}
+                    </div>
+                  `}
+                </div>
+              </div>
+            `)}
+          </div>
         `}
       </div>
 

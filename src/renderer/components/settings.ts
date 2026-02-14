@@ -10,6 +10,28 @@ export class SettingsScreen extends LitElement {
       max-width: 600px;
     }
 
+    .header {
+      margin-bottom: 24px;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      border-radius: 4px;
+      transition: all 200ms ease-in-out;
+    }
+
+    .back-btn:hover {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
     .title {
       font-size: 24px;
       font-weight: 600;
@@ -136,8 +158,21 @@ export class SettingsScreen extends LitElement {
     }));
   }
 
+  private goBack() {
+    this.dispatchEvent(new CustomEvent('navigate-back'));
+  }
+
   render() {
     return html`
+      <div class="header">
+        <button class="back-btn" @click=${this.goBack}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          ${this.translations.workflow.back}
+        </button>
+      </div>
       <h1 class="title">${this.translations.settings.title}</h1>
 
       <div class="settings-section">

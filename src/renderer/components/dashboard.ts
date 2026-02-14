@@ -183,6 +183,21 @@ export class DashboardScreen extends LitElement {
       gap: 12px;
     }
 
+    .delete-btn {
+      background-color: transparent;
+      border: 1px solid var(--error);
+      color: var(--error);
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 200ms ease-in-out;
+    }
+
+    .delete-btn:hover {
+      background-color: var(--error);
+      color: white;
+    }
+
     .file-count-badge {
       display: inline-flex;
       align-items: center;
@@ -284,6 +299,42 @@ export class DashboardScreen extends LitElement {
     this.dispatchEvent(new CustomEvent('navigate-to-workflow', {
       detail: { projectId: project.id }
     }));
+  }
+
+  private async exportProject() {
+    if (!this.selectedProject) return;
+    
+    try {
+      const result = await window.electronAPI.exportProject(this.selectedProject.id);
+      if (result.success && result.data) {
+        this.closeInfoModal();
+      } else if (result.error) {
+        this.error = result.error;
+      }
+    } catch (error) {
+      console.error('Failed to export project:', error);
+      this.error = 'Failed to export project';
+    }
+  }
+
+  private async deleteProject() {
+    if (!this.selectedProject) return;
+    
+    const confirmed = confirm(`${this.translations.projectInfo.deleteConfirm} "${this.selectedProject.name}"?`);
+    if (!confirmed) return;
+    
+    try {
+      const result = await window.electronAPI.deleteProject(this.selectedProject.id);
+      if (result.success) {
+        await this.loadProjects();
+        this.closeInfoModal();
+      } else if (result.error) {
+        this.error = result.error;
+      }
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      this.error = 'Failed to delete project';
+    }
   }
 
   render() {
@@ -393,6 +444,12 @@ export class DashboardScreen extends LitElement {
               </div>
             </div>
             <div class="modal-footer">
+              <button class="delete-btn" @click=${this.deleteProject}>
+                ${this.translations.projectInfo.delete}
+              </button>
+              <button class="secondary" @click=${this.exportProject}>
+                ${this.translations.projectInfo.exportProject}
+              </button>
               <button class="primary" @click=${this.closeInfoModal}>
                 ${this.translations.projectInfo.close}
               </button>
