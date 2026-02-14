@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import { Project, FileItem, Translations } from '../types';
+import '@lit-labs/virtualizer';
 
 @customElement('workflow-screen')
 export class WorkflowScreen extends LitElement {
@@ -51,6 +52,36 @@ export class WorkflowScreen extends LitElement {
       border-radius: 8px;
       box-shadow: var(--shadow-card);
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 140px);
+      width: 100%;
+    }
+
+    .files-list {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+      padding-bottom: 50px;
+    }
+
+    lit-virtualizer {
+      height: 100%;
+      width: 100%;
+    }
+
+    .file-item {
+      width: 100%;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .files-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    lit-virtualizer {
+      height: 100%;
     }
 
     .files-header {
@@ -134,6 +165,7 @@ export class WorkflowScreen extends LitElement {
 
     .content-edit {
       width: 100%;
+      box-sizing: border-box;
       min-height: 150px;
       padding: 12px;
       background-color: var(--bg-secondary);
@@ -221,13 +253,13 @@ export class WorkflowScreen extends LitElement {
   private async loadFiles() {
     this.loading = true;
     try {
-      const result = await window.electronAPI.listFiles(this.projectId);
+      const result = await window.electronAPI.listFilesWithContent(this.projectId);
       if (result.success && result.data) {
         this.files = result.data;
-        // Load content for all files
+        // Initialize file contents from loaded data
         for (const file of this.files) {
-          if (!this.fileContents.has(file.id)) {
-            await this.loadFileContent(file);
+          if (file.content !== undefined && !this.fileContents.has(file.id)) {
+            this.fileContents.set(file.id, file.content);
           }
         }
       }
@@ -235,31 +267,6 @@ export class WorkflowScreen extends LitElement {
       console.error('Failed to load files:', error);
     } finally {
       this.loading = false;
-    }
-  }
-
-  private async createFile() {
-    try {
-      const result = await window.electronAPI.createFile(this.projectId);
-      if (result.success) {
-        await this.loadFiles();
-      } else {
-        this.showError(result.error || 'Failed to create file');
-      }
-    } catch (error) {
-      console.error('Failed to create file:', error);
-      this.showError('Failed to create file');
-    }
-  }
-
-  private async loadFileContent(file: FileItem) {
-    try {
-      const result = await window.electronAPI.readFile(file.path);
-      if (result.success && result.data !== undefined) {
-        this.fileContents = new Map(this.fileContents).set(file.id, result.data);
-      }
-    } catch (error) {
-      console.error('Failed to load file content:', error);
     }
   }
 
@@ -324,63 +331,51 @@ export class WorkflowScreen extends LitElement {
       </div>
 
       <div class="files-container">
-        <div class="files-header">
-          <span class="files-title">Files</span>
-          <button class="primary" @click=${this.createFile}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Create File
-          </button>
-        </div>
-
         ${this.loading ? html`
           <div class="loading">Loading...</div>
-        ` : this.files.length === 0 ? html`
-          <div class="empty-state">
-            ${this.translations.workflow.noFiles}
-          </div>
         ` : html`
           <div class="files-list">
-            ${this.files.map(file => html`
-              <div class="file-item">
-                <div class="file-header">
-                  <span class="file-name">${file.name}</span>
-                  <div class="file-actions">
-                    <button 
-                      class="icon-btn ${this.editingFileId === file.id ? 'active' : ''}"
-                      @click=${() => this.toggleEdit(file)}
-                      title="${this.editingFileId === file.id ? 'Save' : 'Edit'}"
-                    >
-                      ${this.editingFileId === file.id ? html`
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                      ` : html`
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                      `}
-                    </button>
+            <lit-virtualizer
+              .items=${this.files}
+              .renderItem=${(file: FileItem) => html`
+                <div class="file-item">
+                  <div class="file-header">
+                    <span class="file-name">${file.name}</span>
+                    <div class="file-actions">
+                      <button 
+                        class="icon-btn ${this.editingFileId === file.id ? 'active' : ''}"
+                        @click=${() => this.toggleEdit(file)}
+                        title="${this.editingFileId === file.id ? 'Save' : 'Edit'}"
+                      >
+                        ${this.editingFileId === file.id ? html`
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        ` : html`
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                        `}
+                      </button>
+                    </div>
+                  </div>
+                  <div class="file-content">
+                    ${this.editingFileId === file.id ? html`
+                      <textarea
+                        class="content-edit"
+                        .value=${this.fileContents.get(file.id) || ''}
+                        @input=${(e: Event) => this.handleContentChange(file, e)}
+                      ></textarea>
+                    ` : html`
+                      <div class="content-view">
+                        ${this.fileContents.get(file.id) || ''}
+                      </div>
+                    `}
                   </div>
                 </div>
-                <div class="file-content">
-                  ${this.editingFileId === file.id ? html`
-                    <textarea
-                      class="content-edit"
-                      .value=${this.fileContents.get(file.id) || ''}
-                      @input=${(e: Event) => this.handleContentChange(file, e)}
-                    ></textarea>
-                  ` : html`
-                    <div class="content-view">
-                      ${this.fileContents.get(file.id) || '(empty)'}
-                    </div>
-                  `}
-                </div>
-              </div>
-            `)}
+              `}
+            ></lit-virtualizer>
           </div>
         `}
       </div>

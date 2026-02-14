@@ -12,6 +12,7 @@ export interface FileItem {
   id: string;
   name: string;
   path: string;
+  content?: string;
 }
 
 export interface Settings {
@@ -43,6 +44,7 @@ declare global {
       readFile: (filePath: string) => Promise<IpcResult<string>>;
       writeFile: (filePath: string, content: string) => Promise<IpcResult>;
       listFiles: (projectId: number) => Promise<IpcResult<FileItem[]>>;
+      listFilesWithContent: (projectId: number) => Promise<IpcResult<FileItem[]>>;
       openFile: (filePath: string) => Promise<IpcResult>;
       removeFile: (filePath: string, deleteFromDisk: boolean) => Promise<IpcResult>;
       getSettings: () => Promise<IpcResult<Settings>>;

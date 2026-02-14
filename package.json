@@ -19,6 +19,7 @@
     "package:linux": "npm run build && electron-builder --linux"
   },
   "dependencies": {
+    "@lit-labs/virtualizer": "^2.1.1",
     "archiver": "^7.0.1",
     "better-sqlite3": "^9.2.2",
     "electron-log": "^5.0.1",

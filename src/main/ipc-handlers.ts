@@ -346,8 +346,15 @@ export function setupIpcHandlers(): void {
 
   ipcMain.handle('file:write', async (_event, filePath: string, content: string) => {
     try {
-      fs.writeFileSync(filePath, content, 'utf-8');
-      log.info(`Saved file: ${filePath}`);
+      // Only write if:
+      // 1. Content is non-empty, OR
+      // 2. File already exists (preserve existing content)
+      const fileExists = fs.existsSync(filePath);
+      
+      if (content.trim() || fileExists) {
+        fs.writeFileSync(filePath, content, 'utf-8');
+        log.info(`Saved file: ${filePath}`);
+      }
       return { success: true };
     } catch (error: any) {
       log.error('Error writing file:', error);
@@ -381,6 +388,49 @@ export function setupIpcHandlers(): void {
       return { success: true, data: files };
     } catch (error: any) {
       log.error('Error listing files:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // New handler: prepopulate 100 items, load content only if file exists
+  ipcMain.handle('file:listWithContent', async (_event, projectId: number) => {
+    try {
+      const project = db.getProject(projectId);
+      if (!project) {
+        return { success: false, error: 'Project not found' };
+      }
+
+      const projectFolder = path.join(app.getPath('home'), 'SuperFiles', project.name);
+      const contentsFolder = path.join(projectFolder, 'contents');
+      
+      // Ensure contents folder exists
+      if (!fs.existsSync(contentsFolder)) {
+        fs.mkdirSync(contentsFolder, { recursive: true });
+      }
+
+      // Generate 100 items
+      const items = [];
+      for (let i = 1; i <= 100; i++) {
+        const fileName = `${String(i).padStart(2, '0')}.txt`;
+        const filePath = path.join(contentsFolder, fileName);
+        
+        // Read content if file exists
+        let content = '';
+        if (fs.existsSync(filePath)) {
+          content = fs.readFileSync(filePath, 'utf-8');
+        }
+        
+        items.push({
+          id: fileName,
+          name: fileName,
+          path: filePath,
+          content: content
+        });
+      }
+
+      return { success: true, data: items };
+    } catch (error: any) {
+      log.error('Error listing files with content:', error);
       return { success: false, error: error.message };
     }
   });

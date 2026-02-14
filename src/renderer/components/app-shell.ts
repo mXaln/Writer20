@@ -109,7 +109,9 @@ export class AppShell extends LitElement {
       .content {
         flex: 1;
         padding: 24px;
-        overflow: auto;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
       }
 
       @media (max-width: 768px) {

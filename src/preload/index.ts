@@ -28,6 +28,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('file:write', filePath, content),
   listFiles: (projectId: number) =>
     ipcRenderer.invoke('file:list', projectId),
+  listFilesWithContent: (projectId: number) =>
+    ipcRenderer.invoke('file:listWithContent', projectId),
   openFile: (filePath: string) =>
     ipcRenderer.invoke('file:open', filePath),
   removeFile: (filePath: string, deleteFromDisk: boolean) =>

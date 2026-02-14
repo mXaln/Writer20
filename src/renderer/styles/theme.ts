@@ -56,6 +56,7 @@ export const baseStyles = css`
     color: var(--text-primary);
     background-color: var(--bg-primary);
     min-height: 100vh;
+    overflow: hidden;
   }
 
   h1 {
