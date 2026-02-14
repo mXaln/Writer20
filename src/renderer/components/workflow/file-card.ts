@@ -1,8 +1,8 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
-import {FileItem} from '../types';
-import {baseStyles} from "../styles/base";
-import {fontStyles} from "../styles/fonts";
+import {FileItem} from '../../types';
+import {baseStyles} from "../../styles/base";
+import {fontStyles} from "../../styles/fonts";
 
 @customElement('file-card')
 export class FileCard extends LitElement {

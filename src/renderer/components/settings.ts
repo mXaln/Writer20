@@ -1,6 +1,6 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
-import {Theme, Language, Translations} from '../types';
+import {Theme, Language} from '../types';
 import { baseStyles } from "../styles/base";
 import { fontStyles } from "../styles/fonts";
 
