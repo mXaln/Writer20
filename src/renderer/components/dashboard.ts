@@ -1,12 +1,16 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import { Project, Translations } from '../types';
+import '@lit-labs/virtualizer';
 
 @customElement('dashboard-screen')
 export class DashboardScreen extends LitElement {
   static styles = css`
     :host {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
     }
 
     .header {
@@ -50,9 +54,17 @@ export class DashboardScreen extends LitElement {
     }
 
     .projects-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    lit-virtualizer {
+      width: 100%;
+      height: 100%;
     }
 
     .project-card {
@@ -63,9 +75,10 @@ export class DashboardScreen extends LitElement {
       cursor: pointer;
       transition: all 200ms ease-in-out;
       position: relative;
-      min-height: 160px;
       display: flex;
       flex-direction: column;
+      width: 100%;
+      margin-bottom: 20px;
     }
 
     .project-card:hover {
@@ -412,18 +425,21 @@ export class DashboardScreen extends LitElement {
         </div>
       ` : html`
         <div class="projects-grid">
-          ${this.projects.map(project => html`
-            <div class="project-card" @click=${() => this.openWorkflow(project)}>
-              <div class="project-name">${project.language} - ${project.book} - ${project.type}</div>
-              <button class="info-btn" @click=${(e: Event) => this.openInfoModal(project, e)}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="16" x2="12" y2="12"></line>
-                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                </svg>
-              </button>
-            </div>
-          `)}
+          <lit-virtualizer
+            .items=${this.projects}
+            .renderItem=${(project: Project) => html`
+              <div class="project-card" @click=${() => this.openWorkflow(project)}>
+                <div class="project-name">${project.language} - ${project.book} - ${project.type}</div>
+                <button class="info-btn" @click=${(e: Event) => this.openInfoModal(project, e)}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                </button>
+              </div>
+            `}
+          ></lit-virtualizer>
         </div>
       `}
 
