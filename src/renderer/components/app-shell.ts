@@ -1,8 +1,9 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { baseStyles, getThemeCSS, getEffectiveTheme } from '../styles/theme';
+import { getThemeCSS, getEffectiveTheme } from '../styles/theme';
+import { baseStyles } from "../styles/base";
 import { getTranslations, Translations } from '../i18n/en';
-import { Theme, Language, Settings } from '../types';
+import { Theme, Language } from '../types';
 
 type Screen = 'dashboard' | 'workflow' | 'settings';
 
@@ -232,27 +233,16 @@ export class AppShell extends LitElement {
             <div class="nav-items"></div>
             <div class="nav-bottom">
               <button class="menu-btn" @click=${(e: Event) => { e.stopPropagation(); this.toggleMenu(); }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="5" r="2"></circle>
-                  <circle cx="12" cy="12" r="2"></circle>
-                  <circle cx="12" cy="19" r="2"></circle>
-                </svg>
+                <span class="material-icons">more_vert</span>
               </button>
               ${this.showMenu ? html`
                 <div class="dropdown-menu">
                   <button class="menu-item" @click=${() => this.importProject()}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="7 10 12 15 17 10"></polyline>
-                      <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
+                    <span class="material-icons">file_upload</span>
                     Import Project
                   </button>
                   <button class="menu-item" @click=${() => this.navigateTo('settings')}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <circle cx="12" cy="12" r="3"></circle>
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
+                    <span class="material-icons">settings</span>
                     ${this.translations.nav.settings}
                   </button>
               </div>

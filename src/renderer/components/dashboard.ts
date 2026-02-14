@@ -1,556 +1,465 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, state, property } from 'lit/decorators.js';
-import { Project, Translations } from '../types';
+import {LitElement, html, css} from 'lit';
+import {customElement, state, property} from 'lit/decorators.js';
+import {Project, Translations} from '../types';
+import { baseStyles } from "../styles/base";
 import '@lit-labs/virtualizer';
 
 @customElement('dashboard-screen')
 export class DashboardScreen extends LitElement {
-  static styles = css`
-    :host {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      overflow: hidden;
-    }
+    static styles = [
+        baseStyles,
+        css`
+            :host {
+                display: flex;
+                flex-direction: column;
+            }
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      position: relative;
-      min-height: 40px;
-    }
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 24px;
+                position: relative;
+                min-height: 40px;
+            }
 
-    .title {
-      font-size: 24px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
+            .title {
+                font-size: 24px;
+                font-weight: 600;
+                color: var(--text-primary);
+            }
 
-    .fab {
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-      transition: all 200ms ease-in-out;
-    }
+            .fab {
+                position: absolute;
+                right: 0;
+                bottom: 0;
+                width: 56px;
+                height: 56px;
+                border-radius: 50%;
+                background-color: var(--primary);
+                color: white;
+                border: none;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 28px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+                transition: all 200ms ease-in-out;
+            }
 
-    .fab:hover {
-      background-color: var(--primary-hover);
-      transform: scale(1.05);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-    }
+            .fab:hover {
+                background-color: var(--primary-hover);
+                transform: scale(1.05);
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+            }
 
-    .projects-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      width: 100%;
-      overflow-y: auto;
-      flex: 1;
-    }
+            .projects-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+                overflow-y: auto;
+                flex: 1;
+            }
 
-    lit-virtualizer {
-      width: 100%;
-      height: 100%;
-    }
+            .project-card {
+                background-color: var(--surface);
+                border-radius: 8px;
+                box-shadow: var(--shadow-card);
+                padding: 16px;
+                cursor: pointer;
+                transition: all 200ms ease-in-out;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                margin-bottom: 20px;
+            }
 
-    .project-card {
-      background-color: var(--surface);
-      border-radius: 8px;
-      box-shadow: var(--shadow-card);
-      padding: 16px;
-      cursor: pointer;
-      transition: all 200ms ease-in-out;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      margin-bottom: 20px;
-    }
+            .project-card:hover {
+                box-shadow: var(--shadow-elevated);
+                transform: translateY(-2px);
+            }
 
-    .project-card:hover {
-      box-shadow: var(--shadow-elevated);
-      transform: translateY(-2px);
-    }
+            .project-name {
+                font-size: 18px;
+                font-weight: 600;
+                color: var(--text-primary);
+                margin-bottom: 8px;
+                padding-right: 40px;
+            }
 
-    .project-name {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 8px;
-      padding-right: 40px;
-    }
+            .project-meta {
+                font-size: 14px;
+                color: var(--text-secondary);
+                flex: 1;
+            }
 
-    .project-meta {
-      font-size: 14px;
-      color: var(--text-secondary);
-      flex: 1;
-    }
+            .info-btn {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                background: none;
+                border: none;
+                padding: 8px;
+                border-radius: 50%;
+                cursor: pointer;
+                color: var(--text-secondary);
+                transition: all 200ms ease-in-out;
+            }
 
-    .info-btn {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: none;
-      border: none;
-      padding: 8px;
-      border-radius: 50%;
-      cursor: pointer;
-      color: var(--text-secondary);
-      transition: all 200ms ease-in-out;
-    }
+            .info-btn:hover {
+                background-color: rgba(0, 0, 0, 0.1);
+                color: var(--primary);
+            }
 
-    .info-btn:hover {
-      background-color: rgba(0,0,0,0.1);
-      color: var(--primary);
-    }
+            .empty-state {
+                text-align: center;
+                padding: 48px;
+                color: var(--text-secondary);
+            }
 
-    .empty-state {
-      text-align: center;
-      padding: 48px;
-      color: var(--text-secondary);
-    }
+            .form-group {
+                margin-bottom: 16px;
+            }
 
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: var(--overlay);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
+            .form-label {
+                display: block;
+                font-size: 14px;
+                font-weight: 500;
+                margin-bottom: 8px;
+                color: var(--text-primary);
+            }
 
-    .modal {
-      background-color: var(--surface);
-      border-radius: 8px;
-      box-shadow: var(--shadow-elevated);
-      padding: 24px;
-      width: 400px;
-      max-width: 90%;
-    }
+            .form-input {
+                width: 100%;
+                padding: 10px 12px;
+                border: 1px solid var(--border);
+                border-radius: 4px;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                font-size: 14px;
+                box-sizing: border-box;
+            }
 
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
+            .form-input:focus {
+                outline: none;
+                border-color: var(--primary);
+            }
 
-    .modal-title {
-      font-size: 18px;
-      font-weight: 600;
-    }
+            .form-textarea {
+                min-height: 80px;
+                resize: vertical;
+            }
 
-    .modal-close {
-      background: none;
-      border: none;
-      padding: 8px;
-      cursor: pointer;
-      color: var(--text-secondary);
-    }
+            .error-text {
+                color: var(--error);
+                font-size: 12px;
+                margin-top: 4px;
+            }
 
-    .modal-close:hover {
-      color: var(--text-primary);
-    }
+            .info-row {
+                display: flex;
+                margin-bottom: 8px;
+            }
 
-    .modal-body {
-      margin-bottom: 24px;
-    }
+            .info-label {
+                font-weight: 500;
+                margin-right: 8px;
+                color: var(--text-secondary);
+            }
 
-    .form-group {
-      margin-bottom: 16px;
-    }
+            .info-value {
+                color: var(--text-primary);
+            }
 
-    .form-label {
-      display: block;
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 8px;
-      color: var(--text-primary);
-    }
+            .delete-btn {
+                background-color: transparent;
+                border: 1px solid var(--error);
+                color: var(--error);
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 200ms ease-in-out;
+            }
 
-    .form-input {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
-      font-size: 14px;
-      box-sizing: border-box;
-    }
+            .delete-btn:hover {
+                background-color: var(--error);
+                color: white;
+            }
+        `
+    ];
 
-    .form-input:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
+    @property({type: Object}) translations!: Translations;
+    @state() private projects: Project[] = [];
+    @state() private showCreateModal = false;
+    @state() private showInfoModal = false;
+    @state() private selectedProject: Project | null = null;
+    @state() private newLanguage = '';
+    @state() private newBook = '';
+    @state() private newType = 'ulb';
+    @state() private error = '';
 
-    .form-textarea {
-      min-height: 80px;
-      resize: vertical;
-    }
-
-    .error-text {
-      color: var(--error);
-      font-size: 12px;
-      margin-top: 4px;
-    }
-
-    .info-row {
-      display: flex;
-      margin-bottom: 8px;
-    }
-
-    .info-label {
-      font-weight: 500;
-      margin-right: 8px;
-      color: var(--text-secondary);
-    }
-
-    .info-value {
-      color: var(--text-primary);
-    }
-
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-    }
-
-    .delete-btn {
-      background-color: transparent;
-      border: 1px solid var(--error);
-      color: var(--error);
-      padding: 8px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 200ms ease-in-out;
-    }
-
-    .delete-btn:hover {
-      background-color: var(--error);
-      color: white;
-    }
-
-    .file-count-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      background-color: var(--primary);
-      color: white;
-      margin-top: 8px;
-    }
-
-    .description-label {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-bottom: 4px;
-    }
-
-    .description-value {
-      font-size: 14px;
-      color: var(--text-primary);
-      margin-bottom: 12px;
-    }
-  `;
-
-  @property({ type: Object }) translations!: Translations;
-  @state() private projects: Project[] = [];
-  @state() private showCreateModal = false;
-  @state() private showInfoModal = false;
-  @state() private selectedProject: Project | null = null;
-  @state() private newLanguage = '';
-  @state() private newBook = '';
-  @state() private newType = 'ulb';
-  @state() private error = '';
-
-  async connectedCallback() {
-    super.connectedCallback();
-    await this.loadProjects();
-    
-    // Listen for project updates (imports, etc.)
-    window.addEventListener('projects-updated', () => this.loadProjects());
-  }
-
-  private async loadProjects() {
-    try {
-      const result = await window.electronAPI.listProjects();
-      if (result.success && result.data) {
-        this.projects = result.data;
-      }
-    } catch (error) {
-      console.error('Failed to load projects:', error);
-    }
-  }
-
-  private openCreateModal() {
-    this.showCreateModal = true;
-    this.newLanguage = '';
-    this.newBook = '';
-    this.newType = 'ulb';
-    this.error = '';
-  }
-
-  private closeCreateModal() {
-    this.showCreateModal = false;
-    this.error = '';
-  }
-
-  private async createProject() {
-    // Validate language: lowercase, a-z0-9-, no spaces
-    const languageRegex = /^[a-z0-9-]+$/;
-    if (!this.newLanguage.trim() || !languageRegex.test(this.newLanguage)) {
-      this.error = 'Language must be lowercase letters, numbers, or hyphens only';
-      return;
-    }
-
-    // Validate book: lowercase, a-z0-9, exactly 3 characters
-    const bookRegex = /^[a-z0-9]{3}$/;
-    if (!this.newBook.trim() || !bookRegex.test(this.newBook)) {
-      this.error = 'Book must be exactly 3 lowercase letters or numbers';
-      return;
-    }
-
-    // Validate type: lowercase, a-z0-9, max 3 characters
-    const typeRegex = /^[a-z0-9]{1,3}$/;
-    if (!this.newType.trim() || !typeRegex.test(this.newType)) {
-      this.error = 'Type must be 1-3 lowercase letters or numbers';
-      return;
-    }
-
-    try {
-      const result = await window.electronAPI.createProject(
-        this.newLanguage.trim(),
-        this.newBook.trim(),
-        this.newType.trim()
-      );
-
-      if (result.success) {
+    async connectedCallback() {
+        super.connectedCallback();
         await this.loadProjects();
-        this.closeCreateModal();
-      } else {
-        this.error = result.error || this.translations.errors.databaseError;
-      }
-    } catch (error) {
-      console.error('Failed to create project:', error);
-      this.error = this.translations.errors.databaseError;
+
+        // Listen for project updates (imports, etc.)
+        window.addEventListener('projects-updated', () => this.loadProjects());
     }
-  }
 
-  private openInfoModal(project: Project, event: Event) {
-    event.stopPropagation();
-    this.selectedProject = project;
-    this.showInfoModal = true;
-  }
-
-  private closeInfoModal() {
-    this.showInfoModal = false;
-    this.selectedProject = null;
-  }
-
-  private openWorkflow(project: Project) {
-    this.dispatchEvent(new CustomEvent('navigate-to-workflow', {
-      detail: { projectId: project.id }
-    }));
-  }
-
-  private async exportProject() {
-    if (!this.selectedProject) return;
-    
-    try {
-      const result = await window.electronAPI.exportProject(this.selectedProject.id);
-      if (result.success && result.data) {
-        this.closeInfoModal();
-      } else if (result.error) {
-        this.error = result.error;
-      }
-    } catch (error) {
-      console.error('Failed to export project:', error);
-      this.error = 'Failed to export project';
+    private async loadProjects() {
+        try {
+            const result = await window.electronAPI.listProjects();
+            if (result.success && result.data) {
+                this.projects = result.data;
+            }
+        } catch (error) {
+            console.error('Failed to load projects:', error);
+        }
     }
-  }
 
-  private async deleteProject() {
-    if (!this.selectedProject) return;
-    
-    const confirmed = confirm(`${this.translations.projectInfo.deleteConfirm} "${this.selectedProject.name}"?`);
-    if (!confirmed) return;
-    
-    try {
-      const result = await window.electronAPI.deleteProject(this.selectedProject.id);
-      if (result.success) {
-        await this.loadProjects();
-        this.closeInfoModal();
-      } else if (result.error) {
-        this.error = result.error;
-      }
-    } catch (error) {
-      console.error('Failed to delete project:', error);
-      this.error = 'Failed to delete project';
+    private openCreateModal() {
+        this.showCreateModal = true;
+        this.newLanguage = '';
+        this.newBook = '';
+        this.newType = 'ulb';
+        this.error = '';
     }
-  }
 
-  render() {
-    return html`
-      <div class="header">
-        <h1 class="title">${this.translations.dashboard.title}</h1>
-        <button class="fab" @click=${this.openCreateModal}>
-          +
-        </button>
-      </div>
+    private closeCreateModal() {
+        this.showCreateModal = false;
+        this.error = '';
+    }
 
-      ${this.projects.length === 0 ? html`
-        <div class="empty-state">
-          ${this.translations.dashboard.noProjects}
-        </div>
-      ` : html`
-        <div class="projects-grid">
-          <lit-virtualizer
-            .items=${this.projects}
-            .renderItem=${(project: Project) => html`
-              <div class="project-card" @click=${() => this.openWorkflow(project)}>
-                <div class="project-name">${project.language} - ${project.book} - ${project.type}</div>
-                <button class="info-btn" @click=${(e: Event) => this.openInfoModal(project, e)}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="16" x2="12" y2="12"></line>
-                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                  </svg>
+    private async createProject() {
+        // Validate language: lowercase, a-z0-9-, no spaces
+        const languageRegex = /^[a-z0-9-]+$/;
+        if (!this.newLanguage.trim() || !languageRegex.test(this.newLanguage)) {
+            this.error = 'Language must be lowercase letters, numbers, or hyphens only';
+            return;
+        }
+
+        // Validate book: lowercase, a-z0-9, exactly 3 characters
+        const bookRegex = /^[a-z0-9]{3}$/;
+        if (!this.newBook.trim() || !bookRegex.test(this.newBook)) {
+            this.error = 'Book must be exactly 3 lowercase letters or numbers';
+            return;
+        }
+
+        // Validate type: lowercase, a-z0-9, max 3 characters
+        const typeRegex = /^[a-z0-9]{1,3}$/;
+        if (!this.newType.trim() || !typeRegex.test(this.newType)) {
+            this.error = 'Type must be 1-3 lowercase letters or numbers';
+            return;
+        }
+
+        try {
+            const result = await window.electronAPI.createProject(
+                this.newLanguage.trim(),
+                this.newBook.trim(),
+                this.newType.trim()
+            );
+
+            if (result.success) {
+                await this.loadProjects();
+                this.closeCreateModal();
+            } else {
+                this.error = result.error || this.translations.errors.databaseError;
+            }
+        } catch (error) {
+            console.error('Failed to create project:', error);
+            this.error = this.translations.errors.databaseError;
+        }
+    }
+
+    private openInfoModal(project: Project, event: Event) {
+        event.stopPropagation();
+        this.selectedProject = project;
+        this.showInfoModal = true;
+    }
+
+    private closeInfoModal() {
+        this.showInfoModal = false;
+        this.selectedProject = null;
+    }
+
+    private openWorkflow(project: Project) {
+        this.dispatchEvent(new CustomEvent('navigate-to-workflow', {
+            detail: {projectId: project.id}
+        }));
+    }
+
+    private async exportProject() {
+        if (!this.selectedProject) return;
+
+        try {
+            const result = await window.electronAPI.exportProject(this.selectedProject.id);
+            if (result.success && result.data) {
+                this.closeInfoModal();
+            } else if (result.error) {
+                this.error = result.error;
+            }
+        } catch (error) {
+            console.error('Failed to export project:', error);
+            this.error = 'Failed to export project';
+        }
+    }
+
+    private async deleteProject() {
+        if (!this.selectedProject) return;
+
+        const confirmed = confirm(`${this.translations.projectInfo.deleteConfirm} "${this.selectedProject.name}"?`);
+        if (!confirmed) return;
+
+        try {
+            const result = await window.electronAPI.deleteProject(this.selectedProject.id);
+            if (result.success) {
+                await this.loadProjects();
+                this.closeInfoModal();
+            } else if (result.error) {
+                this.error = result.error;
+            }
+        } catch (error) {
+            console.error('Failed to delete project:', error);
+            this.error = 'Failed to delete project';
+        }
+    }
+
+    render() {
+        return html`
+            <div class="header">
+                <h1 class="title">${this.translations.dashboard.title}</h1>
+                <button class="fab" @click=${this.openCreateModal}>
+                    +
                 </button>
-              </div>
+            </div>
+
+            ${this.projects.length === 0 ? html`
+                <div class="empty-state">
+                    ${this.translations.dashboard.noProjects}
+                </div>
+            ` : html`
+                <div class="projects-grid">
+                    <lit-virtualizer
+                            .items=${this.projects}
+                            .renderItem=${(project: Project) => html`
+                                <div class="project-card" @click=${() => this.openWorkflow(project)}>
+                                    <div class="project-name">${project.language} - ${project.book} - ${project.type}
+                                    </div>
+                                    <button class="info-btn" @click=${(e: Event) => this.openInfoModal(project, e)}>
+                                        <span class="material-icons">info</span>
+                                    </button>
+                                </div>
+                            `}
+                    ></lit-virtualizer>
+                </div>
             `}
-          ></lit-virtualizer>
-        </div>
-      `}
 
-      ${this.showCreateModal ? html`
-        <div class="modal-overlay" @click=${this.closeCreateModal}>
-          <div class="modal" @click=${(e: Event) => e.stopPropagation()}>
-            <div class="modal-header">
-              <h2 class="modal-title">${this.translations.dashboard.createProject}</h2>
-              <button class="modal-close" @click=${this.closeCreateModal}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-            <div class="modal-body">
-              <div class="form-group">
-                <label class="form-label">Language (e.g., en, ru, es)</label>
-                <input 
-                  type="text" 
-                  class="form-input"
-                  placeholder="a-z0-9-"
-                  .value=${this.newLanguage}
-                  @input=${(e: Event) => this.newLanguage = (e.target as HTMLInputElement).value.toLowerCase()}
-                  @keydown=${(e: KeyboardEvent) => e.key === 'Enter' && this.createProject()}
-                />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Book (exactly 3 chars)</label>
-                <input 
-                  type="text" 
-                  class="form-input"
-                  placeholder="a-z0-9 (3 chars)"
-                  maxlength="3"
-                  .value=${this.newBook}
-                  @input=${(e: Event) => this.newBook = (e.target as HTMLInputElement).value.toLowerCase()}
-                  @keydown=${(e: KeyboardEvent) => e.key === 'Enter' && this.createProject()}
-                />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Resource</label>
-                <select 
-                  class="form-input"
-                  .value=${this.newType}
-                  @change=${(e: Event) => this.newType = (e.target as HTMLSelectElement).value}
-                >
-                  <option value="ulb">ULB</option>
-                  <option value="udb">UDB</option>
-                  <option value="reg">REG</option>
-                </select>
-              </div>
-              ${this.error ? html`<div class="error-text">${this.error}</div>` : ''}
-            </div>
-            <div class="modal-footer">
-              <button class="secondary" @click=${this.closeCreateModal}>
-                ${this.translations.dashboard.cancel}
-              </button>
-              <button class="primary" @click=${this.createProject}>
-                ${this.translations.dashboard.create}
-              </button>
-            </div>
-          </div>
-        </div>
-      ` : ''}
+            ${this.showCreateModal ? html`
+                <div class="modal-overlay" @click=${this.closeCreateModal}>
+                    <div class="modal" @click=${(e: Event) => e.stopPropagation()}>
+                        <div class="modal-header">
+                            <h2 class="modal-title">${this.translations.dashboard.createProject}</h2>
+                            <button class="modal-close" @click=${this.closeCreateModal}>
+                                <span class="material-icons">close</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label class="form-label">Language (e.g., en, ru, es)</label>
+                                <input
+                                        type="text"
+                                        class="form-input"
+                                        placeholder="a-z0-9-"
+                                        .value=${this.newLanguage}
+                                        @input=${(e: Event) => this.newLanguage = (e.target as HTMLInputElement).value.toLowerCase()}
+                                        @keydown=${(e: KeyboardEvent) => e.key === 'Enter' && this.createProject()}
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Book (exactly 3 chars)</label>
+                                <input
+                                        type="text"
+                                        class="form-input"
+                                        placeholder="a-z0-9 (3 chars)"
+                                        maxlength="3"
+                                        .value=${this.newBook}
+                                        @input=${(e: Event) => this.newBook = (e.target as HTMLInputElement).value.toLowerCase()}
+                                        @keydown=${(e: KeyboardEvent) => e.key === 'Enter' && this.createProject()}
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Resource</label>
+                                <select
+                                        class="form-input"
+                                        .value=${this.newType}
+                                        @change=${(e: Event) => this.newType = (e.target as HTMLSelectElement).value}
+                                >
+                                    <option value="ulb">ULB</option>
+                                    <option value="udb">UDB</option>
+                                    <option value="reg">REG</option>
+                                </select>
+                            </div>
+                            ${this.error ? html`
+                                <div class="error-text">${this.error}</div>` : ''}
+                        </div>
+                        <div class="modal-footer">
+                            <button class="secondary" @click=${this.closeCreateModal}>
+                                ${this.translations.dashboard.cancel}
+                            </button>
+                            <button class="primary" @click=${this.createProject}>
+                                ${this.translations.dashboard.create}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
 
-      ${this.showInfoModal && this.selectedProject ? html`
-        <div class="modal-overlay" @click=${this.closeInfoModal}>
-          <div class="modal" @click=${(e: Event) => e.stopPropagation()}>
-            <div class="modal-header">
-              <h2 class="modal-title">${this.translations.projectInfo.title}</h2>
-              <button class="modal-close" @click=${this.closeInfoModal}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-            <div class="modal-body">
-              <div class="info-row">
-                <span class="info-label">language:</span>
-                <span class="info-value">${this.selectedProject.language}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">book:</span>
-                <span class="info-value">${this.selectedProject.book}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">resource:</span>
-                <span class="info-value">${this.selectedProject.type.toUpperCase()}</span>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button class="delete-btn" @click=${this.deleteProject}>
-                ${this.translations.projectInfo.delete}
-              </button>
-              <button class="secondary" @click=${this.exportProject}>
-                ${this.translations.projectInfo.exportProject}
-              </button>
-              <button class="primary" @click=${this.closeInfoModal}>
-                ${this.translations.projectInfo.close}
-              </button>
-            </div>
-          </div>
-        </div>
-      ` : ''}
-    `;
-  }
+            ${this.showInfoModal && this.selectedProject ? html`
+                <div class="modal-overlay" @click=${this.closeInfoModal}>
+                    <div class="modal" @click=${(e: Event) => e.stopPropagation()}>
+                        <div class="modal-header">
+                            <h2 class="modal-title">${this.translations.projectInfo.title}</h2>
+                            <button class="modal-close" @click=${this.closeInfoModal}>
+                                <span class="material-icons">close</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="info-row">
+                                <span class="info-label">language:</span>
+                                <span class="info-value">${this.selectedProject.language}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">book:</span>
+                                <span class="info-value">${this.selectedProject.book}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">resource:</span>
+                                <span class="info-value">${this.selectedProject.type.toUpperCase()}</span>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="delete-btn" @click=${this.deleteProject}>
+                                ${this.translations.projectInfo.delete}
+                            </button>
+                            <button class="secondary" @click=${this.exportProject}>
+                                ${this.translations.projectInfo.exportProject}
+                            </button>
+                            <button class="primary" @click=${this.closeInfoModal}>
+                                ${this.translations.projectInfo.close}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
+        `;
+    }
 }
 
 declare global {
-  interface HTMLElementTagNameMap {
-    'dashboard-screen': DashboardScreen;
-  }
+    interface HTMLElementTagNameMap {
+        'dashboard-screen': DashboardScreen;
+    }
 }
