@@ -284,7 +284,6 @@ export class WorkflowScreen extends LitElement {
     }
 
     private handleToggleEdit(e: CustomEvent<{file: FileItem}>) {
-        console.log('toggle-edit event received', e.detail);
         const {file} = e.detail;
         if (this.editingFileId === file.id) {
             // Save and exit edit mode

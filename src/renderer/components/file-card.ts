@@ -108,7 +108,6 @@ export class FileCard extends LitElement {
     @property({type: String}) content = '';
 
     private handleToggleEdit() {
-        console.log('file-card: toggle-edit clicked', this.file.name);
         this.dispatchEvent(new CustomEvent('toggle-edit', {
             detail: {file: this.file},
             bubbles: true,
