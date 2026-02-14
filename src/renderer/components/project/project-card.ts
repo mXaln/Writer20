@@ -61,7 +61,6 @@ export class ProjectCard extends LitElement {
     ];
 
     @property({type: Object}) project!: Project;
-    @property({type: String}) translations: any;
 
     private handleClick() {
         this.dispatchEvent(new CustomEvent('project-select', {

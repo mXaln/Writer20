@@ -3,12 +3,14 @@ import {customElement, state} from 'lit/decorators.js';
 import {getThemeCSS, getEffectiveTheme} from '../styles/theme';
 import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
-import {getTranslations, Translations} from '../i18n/locales';
+import {localized, msg} from '@lit/localize';
+const {setLocale} = await import('../i18n/localization');
 import {Theme, Language} from '../types';
 
 type Screen = 'dashboard' | 'workflow' | 'settings';
 
 @customElement('app-shell')
+@localized()
 export class AppShell extends LitElement {
     static styles = [
         baseStyles,
@@ -128,7 +130,6 @@ export class AppShell extends LitElement {
     @state() private currentScreen: Screen = 'dashboard';
     @state() private theme: Theme = 'system';
     @state() private language: Language = 'en';
-    @state() private translations: Translations = getTranslations('en');
     @state() private currentProjectId: number | null = null;
     @state() private showMenu = false;
 
@@ -153,7 +154,8 @@ export class AppShell extends LitElement {
             if (result.success && result.data) {
                 this.theme = (result.data.theme as Theme) || 'system';
                 this.language = (result.data.language as Language) || 'en';
-                this.translations = getTranslations(this.language);
+                // Set the locale
+                await setLocale(this.language);
             }
         } catch (error) {
             console.error('Failed to load settings:', error);
@@ -188,7 +190,7 @@ export class AppShell extends LitElement {
 
     private async handleLanguageChange(newLanguage: Language) {
         this.language = newLanguage;
-        this.translations = getTranslations(newLanguage);
+        await setLocale(newLanguage);
         await window.electronAPI.setSetting('language', newLanguage);
         this.requestUpdate();
     }
@@ -227,7 +229,7 @@ export class AppShell extends LitElement {
     render() {
         return html`
             <header class="top-header">
-                <span class="app-title">${this.translations.app.name}</span>
+                <span class="app-title">${msg('Writer20')}</span>
             </header>
             <div style="display: flex; flex: 1;">
                 ${this.currentScreen !== 'settings' ? html`
@@ -244,11 +246,11 @@ export class AppShell extends LitElement {
                                 <div class="dropdown-menu">
                                     <button class="menu-item" @click=${() => this.importProject()}>
                                         <span class="material-icons">file_upload</span>
-                                        ${this.translations.nav.importProject}
+                                        ${msg('Import Project')}
                                     </button>
                                     <button class="menu-item" @click=${() => this.navigateTo('settings')}>
                                         <span class="material-icons">settings</span>
-                                        ${this.translations.nav.settings}
+                                        ${msg('Settings')}
                                     </button>
                                 </div>
                             ` : ''}
@@ -259,7 +261,6 @@ export class AppShell extends LitElement {
                 <main class="content" @click=${this.closeMenu}>
                     ${this.currentScreen === 'dashboard' ? html`
                         <dashboard-screen
-                                .translations=${this.translations}
                                 @navigate-to-workflow=${(e: CustomEvent) => this.navigateTo('workflow', e.detail.projectId)}
                         ></dashboard-screen>
                     ` : ''}
@@ -267,7 +268,6 @@ export class AppShell extends LitElement {
                     ${this.currentScreen === 'workflow' && this.currentProjectId ? html`
                         <workflow-screen
                                 .projectId=${this.currentProjectId}
-                                .translations=${this.translations}
                                 @navigate-back=${() => this.navigateTo('dashboard')}
                         ></workflow-screen>
                     ` : ''}
@@ -276,7 +276,6 @@ export class AppShell extends LitElement {
                         <settings-screen
                                 .theme=${this.theme}
                                 .language=${this.language}
-                                .translations=${this.translations}
                                 @theme-change=${(e: CustomEvent) => this.handleThemeChange(e.detail.theme)}
                                 @language-change=${(e: CustomEvent) => this.handleLanguageChange(e.detail.language)}
                                 @navigate-back=${() => this.navigateTo('dashboard')}

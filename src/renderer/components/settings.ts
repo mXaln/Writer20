@@ -1,11 +1,12 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
+import {localized, msg} from '@lit/localize';
 import {Theme, Language} from '../types';
 import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
-import {Translations} from "../i18n/locales";
 
 @customElement('settings-screen')
+@localized()
 export class SettingsScreen extends LitElement {
     static styles = [
         baseStyles,
@@ -150,7 +151,6 @@ export class SettingsScreen extends LitElement {
 
     @property({type: String}) theme: Theme = 'system';
     @property({type: String}) language: Language = 'en';
-    @property({type: Object}) translations!: Translations;
 
     private handleThemeChange(newTheme: Theme) {
         this.dispatchEvent(new CustomEvent('theme-change', {
@@ -174,36 +174,36 @@ export class SettingsScreen extends LitElement {
             <div class="header">
                 <button class="back-btn" @click=${this.goBack}>
                     <span class="material-icons">arrow_back</span>
-                    ${this.translations.workflow.back}
+                    ${msg('Back')}
                 </button>
             </div>
-            <h1 class="title">${this.translations.settings.title}</h1>
+            <h1 class="title">${msg('Settings')}</h1>
 
             <div class="settings-section">
                 <div class="section-header">
-                    <h2 class="section-title">${this.translations.settings.appearance}</h2>
+                    <h2 class="section-title">${msg('Appearance')}</h2>
                 </div>
                 <div class="section-content">
                     <div class="setting-item">
-                        <span class="setting-label">${this.translations.settings.theme}</span>
+                        <span class="setting-label">${msg('Theme')}</span>
                         <div class="radio-group">
                             <button
                                     class="radio-option ${this.theme === 'light' ? 'active' : ''}"
                                     @click=${() => this.handleThemeChange('light')}
                             >
-                                ${this.translations.settings.light}
+                                ${msg('Light')}
                             </button>
                             <button
                                     class="radio-option ${this.theme === 'dark' ? 'active' : ''}"
                                     @click=${() => this.handleThemeChange('dark')}
                             >
-                                ${this.translations.settings.dark}
+                                ${msg('Dark')}
                             </button>
                             <button
                                     class="radio-option ${this.theme === 'system' ? 'active' : ''}"
                                     @click=${() => this.handleThemeChange('system')}
                             >
-                                ${this.translations.settings.system}
+                                ${msg('System')}
                             </button>
                         </div>
                     </div>
@@ -212,19 +212,19 @@ export class SettingsScreen extends LitElement {
 
             <div class="settings-section">
                 <div class="section-header">
-                    <h2 class="section-title">${this.translations.settings.language}</h2>
+                    <h2 class="section-title">${msg('Language')}</h2>
                 </div>
                 <div class="section-content">
                     <div class="setting-item">
-                        <span class="setting-label">${this.translations.settings.language}</span>
+                        <span class="setting-label">${msg('Language')}</span>
                         <div class="select-wrapper">
                             <select .value=${this.language} @change=${this.handleLanguageChange}>
-                                <option value="en">${this.translations.settings.english}</option>
-                                <option value="ru">${this.translations.settings.russian}</option>
+                                <option value="en">${msg('English')}</option>
+                                <option value="ru">${msg('Russian')}</option>
                             </select>
                             <span class="select-arrow">
-                <span class="material-icons">arrow_drop_down</span>
-              </span>
+                                <span class="material-icons">arrow_drop_down</span>
+                            </span>
                         </div>
                     </div>
                 </div>

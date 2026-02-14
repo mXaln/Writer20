@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+<file target-language="ru" source-language="en" original="lit-localize-inputs" datatype="plaintext">
+<body>
+<trans-unit id="s8ad64ada3250c668">
+  <source>Writer20</source>
+  <target>Writer20</target>
+</trans-unit>
+<trans-unit id="s43d3893c0970d5f1">
+  <source>Import Project</source>
+  <target>Импорт проекта</target>
+</trans-unit>
+<trans-unit id="s9d8b8aa2b404c2c8">
+  <source>Settings</source>
+  <target>Настройки</target>
+</trans-unit>
+<trans-unit id="sdacfa415c37390ed">
+  <source>Language must be lowercase letters, numbers, or hyphens only</source>
+  <target>Язык должен содержать только строчные буквы, цифры или дефисы</target>
+</trans-unit>
+<trans-unit id="s284fad03a215fed2">
+  <source>Book must be exactly 3 lowercase letters or numbers</source>
+  <target>Книга должна быть ровно 3 строчные буквы или цифры</target>
+</trans-unit>
+<trans-unit id="s7617a1c381118f5b">
+  <source>Resource must be 1-3 lowercase letters or numbers</source>
+  <target>Ресурс должен быть 1-3 строчные буквы или цифры</target>
+</trans-unit>
+<trans-unit id="s1c8e96983fde891d">
+  <source>Database error occurred</source>
+  <target>Произошла ошибка базы данных</target>
+</trans-unit>
+<trans-unit id="s2cb49b0a9f0009b4">
+  <source>Failed to export project</source>
+  <target>Не удалось экспортировать проект</target>
+</trans-unit>
+<trans-unit id="sc70c9a04b5f9e809">
+  <source>Failed to delete project</source>
+  <target>Не удалось удалить проект</target>
+</trans-unit>
+<trans-unit id="s199f5853f4e718f7">
+  <source>Projects</source>
+  <target>Проекты</target>
+</trans-unit>
+<trans-unit id="s7644c5b5bb13f663">
+  <source>No projects yet. Create your first project!</source>
+  <target>Пока нет проектов. Создайте свой первый проект!</target>
+</trans-unit>
+<trans-unit id="s33f42318caec3274">
+  <source>Create Project</source>
+  <target>Создать проект</target>
+</trans-unit>
+<trans-unit id="sefcf950b3cc4fc3b">
+  <source>Language</source>
+  <target>Язык</target>
+</trans-unit>
+<trans-unit id="sf7bdcea7c8207cb8">
+  <source>Book</source>
+  <target>Книга</target>
+</trans-unit>
+<trans-unit id="sce39ae3e3f3d3915">
+  <source>Resource</source>
+  <target>Ресурс</target>
+</trans-unit>
+<trans-unit id="s2ceb11be2290bb1b">
+  <source>Cancel</source>
+  <target>Отмена</target>
+</trans-unit>
+<trans-unit id="s382a2aa3984474dd">
+  <source>Create</source>
+  <target>Создать</target>
+</trans-unit>
+<trans-unit id="s8d9baaa938b44aa2">
+  <source>Project Info</source>
+  <target>Информация о проекте</target>
+</trans-unit>
+<trans-unit id="sdc673e73b5c13aea">
+  <source>Delete</source>
+  <target>Удалить</target>
+</trans-unit>
+<trans-unit id="sd3083da97938e2e2">
+  <source>Export Project</source>
+  <target>Экспорт проекта</target>
+</trans-unit>
+<trans-unit id="sf0e261e04eda82ff">
+  <source>Appearance</source>
+  <target>Внешний вид</target>
+</trans-unit>
+<trans-unit id="saab875d8cfcfe712">
+  <source>Theme</source>
+  <target>Тема</target>
+</trans-unit>
+<trans-unit id="s3b0ab4b52326316f">
+  <source>Light</source>
+  <target>Светлая</target>
+</trans-unit>
+<trans-unit id="sac895c732f350ac5">
+  <source>Dark</source>
+  <target>Тёмная</target>
+</trans-unit>
+<trans-unit id="sa81e2cdaf6921adc">
+  <source>System</source>
+  <target>Системная</target>
+</trans-unit>
+<trans-unit id="s4caed5b7a7e5d89b">
+  <source>English</source>
+  <target>Английский</target>
+</trans-unit>
+<trans-unit id="sa30c12014e955946">
+  <source>Russian</source>
+  <target>Русский</target>
+</trans-unit>
+<trans-unit id="s33f85f24c0f5f008">
+  <source>Save</source>
+  <target>Сохранить</target>
+</trans-unit>
+<trans-unit id="s64ef2a6c2dd1d3d1">
+  <source>Edit</source>
+  <target>Редактировать</target>
+</trans-unit>
+<trans-unit id="s6625a5c88f8c5128">
+  <source>Failed to save file</source>
+  <target>Не удалось сохранить файл</target>
+</trans-unit>
+<trans-unit id="sc16e00a7a8b2fde2">
+  <source>Back</source>
+  <target>Назад</target>
+</trans-unit>
+<trans-unit id="sb1a4c9ac23d34cc5">
+  <source>Are you sure you want to delete "<x id="0" equiv-text="${projectName}"/>"?</source>
+  <target>Вы уверены, что хотите удалить "<x id="0" equiv-text="${projectName}"/>"</target>
+</trans-unit>
+</body>
+</file>
+</xliff>

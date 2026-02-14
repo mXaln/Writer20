@@ -1,7 +1,7 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, state, property} from 'lit/decorators.js';
+import {msg, str} from '@lit/localize';
 import {Project} from '../../types';
-import {Translations} from '../../i18n/locales';
 import {baseStyles} from "../../styles/base";
 import {fontStyles} from "../../styles/fonts";
 import '@lit-labs/virtualizer';
@@ -150,7 +150,6 @@ export class DashboardScreen extends LitElement {
         `
     ];
 
-    @property({type: Object}) translations!: Translations;
     @state() private projects: Project[] = [];
     @state() private showCreateModal = false;
     @state() private showInfoModal = false;
@@ -196,21 +195,21 @@ export class DashboardScreen extends LitElement {
         // Validate language: lowercase, a-z0-9-, no spaces
         const languageRegex = /^[a-z0-9-]+$/;
         if (!this.newLanguage.trim() || !languageRegex.test(this.newLanguage)) {
-            this.error = this.translations.errors.invalidLanguage;
+            this.error = msg('Language must be lowercase letters, numbers, or hyphens only');
             return;
         }
 
         // Validate book: lowercase, a-z0-9, exactly 3 characters
         const bookRegex = /^[a-z0-9]{3}$/;
         if (!this.newBook.trim() || !bookRegex.test(this.newBook)) {
-            this.error = this.translations.errors.invalidBook;
+            this.error = msg('Book must be exactly 3 lowercase letters or numbers');
             return;
         }
 
         // Validate type: lowercase, a-z0-9, max 3 characters
         const typeRegex = /^[a-z0-9]{1,3}$/;
         if (!this.newType.trim() || !typeRegex.test(this.newType)) {
-            this.error = this.translations.errors.invalidResource;
+            this.error = msg('Resource must be 1-3 lowercase letters or numbers');
             return;
         }
 
@@ -225,11 +224,11 @@ export class DashboardScreen extends LitElement {
                 await this.loadProjects();
                 this.closeCreateModal();
             } else {
-                this.error = result.error || this.translations.errors.databaseError;
+                this.error = result.error || msg('Database error occurred');
             }
         } catch (error) {
             console.error('Failed to create project:', error);
-            this.error = this.translations.errors.databaseError;
+            this.error = msg('Database error occurred');
         }
     }
 
@@ -262,14 +261,15 @@ export class DashboardScreen extends LitElement {
             }
         } catch (error) {
             console.error('Failed to export project:', error);
-            this.error = this.translations.errors.failedToExport;
+            this.error = msg('Failed to export project');
         }
     }
 
     private async deleteProject() {
         if (!this.selectedProject) return;
 
-        const confirmed = confirm(`${this.translations.projectInfo.deleteConfirm} "${this.selectedProject.name}"?`);
+        const projectName = this.selectedProject.name;
+        const confirmed = confirm(msg(str`Are you sure you want to delete "${projectName}"?`));
         if (!confirmed) return;
 
         try {
@@ -282,14 +282,14 @@ export class DashboardScreen extends LitElement {
             }
         } catch (error) {
             console.error('Failed to delete project:', error);
-            this.error = this.translations.errors.failedToDelete;
+            this.error = msg('Failed to delete project');
         }
     }
 
     render() {
         return html`
             <div class="header">
-                <h1 class="title">${this.translations.dashboard.title}</h1>
+                <h1 class="title">${msg('Projects')}</h1>
                 <button class="fab" @click=${this.openCreateModal}>
                     +
                 </button>
@@ -297,7 +297,7 @@ export class DashboardScreen extends LitElement {
 
             ${this.projects.length === 0 ? html`
                 <div class="empty-state">
-                    ${this.translations.dashboard.noProjects}
+                    ${msg('No projects yet. Create your first project!')}
                 </div>
             ` : html`
                 <div class="projects-grid">
@@ -318,14 +318,14 @@ export class DashboardScreen extends LitElement {
                 <div class="modal-overlay" @click=${this.closeCreateModal}>
                     <div class="modal" @click=${(e: Event) => e.stopPropagation()}>
                         <div class="modal-header">
-                            <h2 class="modal-title">${this.translations.dashboard.createProject}</h2>
+                            <h2 class="modal-title">${msg('Create Project')}</h2>
                             <button class="modal-close" @click=${this.closeCreateModal}>
                                 <span class="material-icons">close</span>
                             </button>
                         </div>
                         <div class="modal-body">
                             <div class="form-group">
-                                <label class="form-label">${this.translations.projectInfo.language}</label>
+                                <label class="form-label">${msg('Language')}</label>
                                 <input
                                         type="text"
                                         class="form-input"
@@ -335,7 +335,7 @@ export class DashboardScreen extends LitElement {
                                 />
                             </div>
                             <div class="form-group">
-                                <label class="form-label">${this.translations.projectInfo.book}</label>
+                                <label class="form-label">${msg('Book')}</label>
                                 <input
                                         type="text"
                                         class="form-input"
@@ -346,7 +346,7 @@ export class DashboardScreen extends LitElement {
                                 />
                             </div>
                             <div class="form-group">
-                                <label class="form-label">${this.translations.projectInfo.resource}</label>
+                                <label class="form-label">${msg('Resource')}</label>
                                 <select
                                         class="form-input"
                                         .value=${this.newType}
@@ -362,10 +362,10 @@ export class DashboardScreen extends LitElement {
                         </div>
                         <div class="modal-footer">
                             <button class="secondary" @click=${this.closeCreateModal}>
-                                ${this.translations.dashboard.cancel}
+                                ${msg('Cancel')}
                             </button>
                             <button class="primary" @click=${this.createProject}>
-                                ${this.translations.dashboard.create}
+                                ${msg('Create')}
                             </button>
                         </div>
                     </div>
@@ -376,31 +376,31 @@ export class DashboardScreen extends LitElement {
                 <div class="modal-overlay" @click=${this.closeInfoModal}>
                     <div class="modal" @click=${(e: Event) => e.stopPropagation()}>
                         <div class="modal-header">
-                            <h2 class="modal-title">${this.translations.projectInfo.title}</h2>
+                            <h2 class="modal-title">${msg('Project Info')}</h2>
                             <button class="modal-close" @click=${this.closeInfoModal}>
                                 <span class="material-icons">close</span>
                             </button>
                         </div>
                         <div class="modal-body">
                             <div class="info-row">
-                                <span class="info-label">${this.translations.projectInfo.language}:</span>
+                                <span class="info-label">${msg('Language')}:</span>
                                 <span class="info-value">${this.selectedProject.language}</span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label">${this.translations.projectInfo.book}:</span>
+                                <span class="info-label">${msg('Book')}:</span>
                                 <span class="info-value">${this.selectedProject.book}</span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label">${this.translations.projectInfo.resource}:</span>
+                                <span class="info-label">${msg('Resource')}:</span>
                                 <span class="info-value">${this.selectedProject.type.toUpperCase()}</span>
                             </div>
                         </div>
                         <div class="modal-footer">
                             <button class="delete-btn" @click=${this.deleteProject}>
-                                ${this.translations.projectInfo.delete}
+                                ${msg('Delete')}
                             </button>
                             <button class="secondary" @click=${this.exportProject}>
-                                ${this.translations.projectInfo.exportProject}
+                                ${msg('Export Project')}
                             </button>
                         </div>
                     </div>

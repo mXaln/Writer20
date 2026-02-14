@@ -1,7 +1,7 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, state, property} from 'lit/decorators.js';
+import {msg} from '@lit/localize';
 import {Project, FileItem} from '../../types';
-import {Translations} from '../../i18n/locales';
 import { baseStyles } from "../../styles/base";
 import { fontStyles } from "../../styles/fonts";
 import './file-card';
@@ -215,7 +215,6 @@ export class WorkflowScreen extends LitElement {
     ];
 
     @property({type: Number}) projectId!: number;
-    @property({type: Object}) translations!: Translations;
     @state() private project: Project | null = null;
     @state() private files: FileItem[] = [];
     @state() private loading = true;
@@ -267,11 +266,11 @@ export class WorkflowScreen extends LitElement {
         try {
             const result = await window.electronAPI.writeFile(file.path, content);
             if (!result.success) {
-                this.showError(result.error || this.translations.errors.failedToSave);
+                this.showError(result.error || msg('Failed to save file'));
             }
         } catch (error) {
             console.error('Failed to save file:', error);
-            this.showError(this.translations.errors.failedToSave);
+            this.showError(msg('Failed to save file'));
         }
     }
 
@@ -335,7 +334,7 @@ export class WorkflowScreen extends LitElement {
                 <div class="header-left">
                     <button class="back-btn" @click=${this.goBack}>
                         <span class="material-icons">arrow_back</span>
-                        ${this.translations.workflow.back}
+                        ${msg('Back')}
                     </button>
                     <h1 class="project-title">${this.project?.language} - ${this.project?.book} -
                         ${this.project?.type}</h1>
@@ -355,7 +354,6 @@ export class WorkflowScreen extends LitElement {
                                             .file=${file}
                                             .isEditing=${this.editingFileId === file.id}
                                             .content=${this.fileContents.get(file.id) || ''}
-                                            .translations=${this.translations}
                                             @toggle-edit=${(e: CustomEvent) => this.handleToggleEdit(e)}
                                             @content-change=${(e: CustomEvent) => this.handleContentChange(e)}
                                     ></file-card>
