@@ -1,13 +1,16 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, state, property} from 'lit/decorators.js';
 import {Project, Translations} from '../types';
-import { baseStyles } from "../styles/base";
+import {baseStyles} from "../styles/base";
+import {fontStyles} from "../styles/fonts";
 import '@lit-labs/virtualizer';
+import './project-card';
 
 @customElement('dashboard-screen')
 export class DashboardScreen extends LitElement {
     static styles = [
         baseStyles,
+        fontStyles,
         css`
             :host {
                 display: flex;
@@ -63,55 +66,10 @@ export class DashboardScreen extends LitElement {
                 flex: 1;
             }
 
-            .project-card {
-                background-color: var(--surface);
-                border-radius: 8px;
-                box-shadow: var(--shadow-card);
-                padding: 16px;
-                cursor: pointer;
-                transition: all 200ms ease-in-out;
-                position: relative;
-                display: flex;
-                flex-direction: column;
-                width: 100%;
-                margin-bottom: 20px;
-            }
-
-            .project-card:hover {
-                box-shadow: var(--shadow-elevated);
-                transform: translateY(-2px);
-            }
-
-            .project-name {
-                font-size: 18px;
-                font-weight: 600;
-                color: var(--text-primary);
-                margin-bottom: 8px;
-                padding-right: 40px;
-            }
-
             .project-meta {
                 font-size: 14px;
                 color: var(--text-secondary);
                 flex: 1;
-            }
-
-            .info-btn {
-                position: absolute;
-                top: 12px;
-                right: 12px;
-                background: none;
-                border: none;
-                padding: 8px;
-                border-radius: 50%;
-                cursor: pointer;
-                color: var(--text-secondary);
-                transition: all 200ms ease-in-out;
-            }
-
-            .info-btn:hover {
-                background-color: rgba(0, 0, 0, 0.1);
-                color: var(--primary);
             }
 
             .empty-state {
@@ -345,13 +303,11 @@ export class DashboardScreen extends LitElement {
                     <lit-virtualizer
                             .items=${this.projects}
                             .renderItem=${(project: Project) => html`
-                                <div class="project-card" @click=${() => this.openWorkflow(project)}>
-                                    <div class="project-name">${project.language} - ${project.book} - ${project.type}
-                                    </div>
-                                    <button class="info-btn" @click=${(e: Event) => this.openInfoModal(project, e)}>
-                                        <span class="material-icons">info</span>
-                                    </button>
-                                </div>
+                                <project-card
+                                        .project=${project}
+                                        @project-select=${() => this.openWorkflow(project)}
+                                        @project-info=${(e: Event) => this.openInfoModal(project, e)}
+                                ></project-card>
                             `}
                     ></lit-virtualizer>
                 </div>

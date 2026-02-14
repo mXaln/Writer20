@@ -1,12 +1,14 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {Theme, Language, Translations} from '../types';
-import {baseStyles} from "../styles/base";
+import { baseStyles } from "../styles/base";
+import { fontStyles } from "../styles/fonts";
 
 @customElement('settings-screen')
 export class SettingsScreen extends LitElement {
     static styles = [
         baseStyles,
+        fontStyles,
         css`
             :host {
                 display: block;

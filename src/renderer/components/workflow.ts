@@ -2,12 +2,14 @@ import {LitElement, html, css} from 'lit';
 import {customElement, state, property} from 'lit/decorators.js';
 import {Project, FileItem, Translations} from '../types';
 import { baseStyles } from "../styles/base";
+import { fontStyles } from "../styles/fonts";
 import '@lit-labs/virtualizer';
 
 @customElement('workflow-screen')
 export class WorkflowScreen extends LitElement {
     static styles = [
         baseStyles,
+        fontStyles,
         css`
             :host {
                 display: block;
