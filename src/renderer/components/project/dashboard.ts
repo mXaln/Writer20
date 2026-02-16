@@ -4,6 +4,7 @@ import {msg, str} from '@lit/localize';
 import {Project} from '../../types';
 import {baseStyles} from "../../styles/base";
 import {fontStyles} from "../../styles/fonts";
+import {getLocalizedError} from '../../i18n/error-messages';
 import '@lit-labs/virtualizer';
 import './project-card';
 
@@ -224,7 +225,7 @@ export class DashboardScreen extends LitElement {
                 await this.loadProjects();
                 this.closeCreateModal();
             } else {
-                this.error = result.error || msg('Database error occurred');
+                this.error = getLocalizedError(result.error) || msg('Database error occurred');
             }
         } catch (error) {
             console.error('Failed to create project:', error);
@@ -257,7 +258,7 @@ export class DashboardScreen extends LitElement {
             if (result.success && result.data) {
                 this.closeInfoModal();
             } else if (result.error) {
-                this.error = result.error;
+                this.error = getLocalizedError(result.error);
             }
         } catch (error) {
             console.error('Failed to export project:', error);
@@ -278,7 +279,7 @@ export class DashboardScreen extends LitElement {
                 await this.loadProjects();
                 this.closeInfoModal();
             } else if (result.error) {
-                this.error = result.error;
+                this.error = getLocalizedError(result.error);
             }
         } catch (error) {
             console.error('Failed to delete project:', error);

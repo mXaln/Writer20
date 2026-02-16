@@ -4,12 +4,13 @@ import {app, shell} from "electron";
 import fs from "fs";
 import log from "electron-log";
 import simpleGit from "simple-git";
+import { ErrorCode } from '../error-codes';
 
 // Helper to get project and ensure contents folder exists
 function getProjectContentsFolder(projectId: number): { projectFolder: string; contentsFolder: string } | { error: string } {
     const project = db.getProject(projectId);
     if (!project) {
-        return { error: 'Project not found' };
+        return { error: ErrorCode.PROJECT_NOT_FOUND };
     }
 
     const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
@@ -72,7 +73,7 @@ export function create(projectId: number) {
 export function read(filePath: string) {
     try {
         if (!fs.existsSync(filePath)) {
-            return { success: false, error: 'File not found' };
+            return { success: false, error: ErrorCode.FILE_NOT_FOUND };
         }
         const content = fs.readFileSync(filePath, 'utf-8');
         return { success: true, data: content };
@@ -117,7 +118,7 @@ export function list(projectId: number) {
     try {
         const project = db.getProject(projectId);
         if (!project) {
-            return { success: false, error: 'Project not found' };
+            return { success: false, error: ErrorCode.PROJECT_NOT_FOUND };
         }
 
         const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
@@ -183,7 +184,7 @@ export async function open(filePath: string) {
     try {
         // Check if file exists
         if (!fs.existsSync(filePath)) {
-            return { success: false, error: 'File not found' };
+            return { success: false, error: ErrorCode.FILE_NOT_FOUND };
         }
 
         // Open with system default application
@@ -199,7 +200,7 @@ export async function open(filePath: string) {
 export function remove(filePath: string, deleteFromDisk: boolean) {
     try {
         if (!fs.existsSync(filePath)) {
-            return { success: false, error: 'File not found' };
+            return { success: false, error: ErrorCode.FILE_NOT_FOUND };
         }
 
         // Delete from disk
@@ -250,7 +251,7 @@ export function getConflictedFiles(projectId: number): string[] {
 export async function resolveConflict(filePath: string, acceptedContent: string, projectId: number) {
     try {
         if (!fs.existsSync(filePath)) {
-            return { success: false, error: 'File not found' };
+            return { success: false, error: ErrorCode.FILE_NOT_FOUND };
         }
 
         // Write the accepted content to the file (removes conflict markers)

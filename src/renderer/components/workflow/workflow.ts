@@ -4,6 +4,7 @@ import {msg} from '@lit/localize';
 import {Project, FileItem, FileConflict, ImportConflictResult} from '../../types';
 import { baseStyles } from "../../styles/base";
 import { fontStyles } from "../../styles/fonts";
+import {getLocalizedError} from '../../i18n/error-messages';
 import './file-card';
 import '@lit-labs/virtualizer';
 
@@ -380,7 +381,7 @@ export class WorkflowScreen extends LitElement {
                 // Reload files to reflect changes
                 await this.loadFiles();
             } else {
-                this.showError(result.error || msg('Failed to resolve conflict'));
+                this.showError(getLocalizedError(result.error) || msg('Failed to resolve conflict'));
             }
         } catch (error) {
             console.error('Failed to resolve conflict:', error);
@@ -395,7 +396,7 @@ export class WorkflowScreen extends LitElement {
         try {
             const result = await window.electronAPI.writeFile(file.path, content);
             if (!result.success) {
-                this.showError(result.error || msg('Failed to save file'));
+                this.showError(getLocalizedError(result.error) || msg('Failed to save file'));
             }
         } catch (error) {
             console.error('Failed to save file:', error);

@@ -6,13 +6,14 @@ import fs from "fs";
 import simpleGit from "simple-git";
 import archiver from "archiver";
 import extract from "extract-zip";
+import { ErrorCode } from '../error-codes';
 
 export async function create(language: string, book: string, type: string) {
     try {
         // Check if project with same language/book/type exists
         const existing = db.getProjectByLanguageBookType(language, book, type);
         if (existing) {
-            return { success: false, error: 'Project with this identifier already exists' };
+            return { success: false, error: ErrorCode.PROJECT_EXISTS };
         }
 
         // Create project in database
@@ -85,7 +86,7 @@ export function get(id: number) {
     try {
         const project = db.getProject(id);
         if (!project) {
-            return { success: false, error: 'Project not found' };
+            return { success: false, error: ErrorCode.PROJECT_NOT_FOUND };
         }
         return { success: true, data: project };
     } catch (error: any) {
@@ -98,7 +99,7 @@ export function remove(id: number) {
     try {
         const project = db.getProject(id);
         if (!project) {
-            return { success: false, error: 'Project not found' };
+            return { success: false, error: ErrorCode.PROJECT_NOT_FOUND };
         }
 
         // Delete project folder
@@ -120,7 +121,7 @@ export async function exportProject(project: any, destinationPath: string) {
     try {
         const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
         if (!fs.existsSync(projectFolder)) {
-            return { success: false, error: 'Project folder not found' };
+            return { success: false, error: ErrorCode.PROJECT_FOLDER_NOT_FOUND };
         }
 
         // Create zip file
@@ -151,7 +152,7 @@ export async function exportProject(project: any, destinationPath: string) {
 export async function importProject(zipPath: string) {
     try {
         if (!fs.existsSync(zipPath)) {
-            return { success: false, error: 'Import file not found' };
+            return { success: false, error: ErrorCode.IMPORT_FILE_NOT_FOUND };
         }
 
         // Create temp folder for extraction
@@ -288,7 +289,7 @@ async function importProjectWithFileMerge(projectId: number, zipPath: string): P
     const project = db.getProject(projectId);
     if (!project) {
         fs.rmSync(tempFolder, { recursive: true, force: true });
-        return { success: false, error: 'Project not found' };
+        return { success: false, error: ErrorCode.PROJECT_NOT_FOUND };
     }
     
     const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
@@ -375,7 +376,7 @@ export async function importWithOption(projectId: number, zipPath: string, optio
         // Try git merge to detect conflicts
         const project = db.getProject(projectId);
         if (!project) {
-            return { success: false, error: 'Project not found' };
+            return { success: false, error: ErrorCode.PROJECT_NOT_FOUND };
         }
         
         const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
@@ -524,7 +525,7 @@ export async function importWithOption(projectId: number, zipPath: string, optio
         }
     }
     
-    return { success: false, error: 'Invalid option' };
+    return { success: false, error: ErrorCode.INVALID_OPTION };
 }
 
 // Helper function to extract zip and copy files to contents folder
@@ -632,7 +633,7 @@ async function importProjectMerge(projectId: number, zipPath: string): Promise<{
     // Merge imported files into existing project (overwrite)
     const project = db.getProject(projectId);
     if (!project) {
-        return { success: false, error: 'Project not found' };
+        return { success: false, error: ErrorCode.PROJECT_NOT_FOUND };
     }
 
     const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);

@@ -138,6 +138,78 @@
   <source>Spanish (Latin America)</source>
   <target>Español (Latinoamérica)</target>
 </trans-unit>
+<trans-unit id="s1e13b5077e946068">
+  <source>Merged with Conflicts</source>
+  <target>Fusionado con conflictos</target>
+</trans-unit>
+<trans-unit id="sdf8d9b8999ba83fb">
+  <source>Merge Successful</source>
+  <target>Fusión exitosa</target>
+</trans-unit>
+<trans-unit id="sb2523df0a5623b7a">
+  <source>The project has been merged, but there are merge conflicts that need to be resolved.</source>
+  <target>El proyecto se ha fusionado, pero hay conflictos que deben resolverse.</target>
+</trans-unit>
+<trans-unit id="s1ed73aa59051a6a6">
+  <source>The project has been merged successfully.</source>
+  <target>El proyecto se ha fusionado correctamente.</target>
+</trans-unit>
+<trans-unit id="s899bb342c48105c8">
+  <source>Resolve Conflicts</source>
+  <target>Resolver conflictos</target>
+</trans-unit>
+<trans-unit id="s091d3d07b5b3076f">
+  <source>OK</source>
+  <target>Aceptar</target>
+</trans-unit>
+<trans-unit id="s3079d5986428d59a">
+  <source>Project Already Exists</source>
+  <target>El proyecto ya existe</target>
+</trans-unit>
+<trans-unit id="s4e97a160b3032828">
+  <source>A project with this identifier already exists. What would you like to do?</source>
+  <target>Ya existe un proyecto con este identificador. ¿Qué te gustaría hacer?</target>
+</trans-unit>
+<trans-unit id="s81a6d4be071237b2">
+  <source>Overwrite</source>
+  <target>Sobrescribir</target>
+</trans-unit>
+<trans-unit id="s0e0a962e81f739c7">
+  <source>Merge</source>
+  <target>Fusionar</target>
+</trans-unit>
+<trans-unit id="s9b62698f516ac411">
+  <source>Failed to resolve conflict</source>
+  <target>Error al resolver el conflicto</target>
+</trans-unit>
+<trans-unit id="s146992649590c5f0">
+  <source>A project with this identifier already exists</source>
+  <target>Ya existe un proyecto con este identificador</target>
+</trans-unit>
+<trans-unit id="s47d515afd033d3df">
+  <source>Project not found</source>
+  <target>Proyecto no encontrado</target>
+</trans-unit>
+<trans-unit id="s3648276a9970ff63">
+  <source>Project folder not found</source>
+  <target>Carpeta del proyecto no encontrada</target>
+</trans-unit>
+<trans-unit id="scda729652c6e3aeb">
+  <source>Import file not found</source>
+  <target>Archivo de importación no encontrado</target>
+</trans-unit>
+<trans-unit id="sd4c9f0639f5f4729">
+  <source>Invalid option</source>
+  <target>Opción no válida</target>
+</trans-unit>
+<trans-unit id="s743e0754729e9146">
+  <source>File not found</source>
+  <target>Archivo no encontrado</target>
+</trans-unit>
+<trans-unit id="sdaecc3c29a27c5c5">
+  <source>An unknown error occurred</source>
+  <target>Ocurrió un error desconocido</target>
+</trans-unit>
 </body>
 </file>
 </xliff>

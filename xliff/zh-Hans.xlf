@@ -138,6 +138,78 @@
   <source>Spanish (Latin America)</source>
   <target>西班牙语（拉丁美洲）</target>
 </trans-unit>
+<trans-unit id="s1e13b5077e946068">
+  <source>Merged with Conflicts</source>
+  <target>合并存在冲突</target>
+</trans-unit>
+<trans-unit id="sdf8d9b8999ba83fb">
+  <source>Merge Successful</source>
+  <target>合并成功</target>
+</trans-unit>
+<trans-unit id="sb2523df0a5623b7a">
+  <source>The project has been merged, but there are merge conflicts that need to be resolved.</source>
+  <target>项目已合并，但存在需要解决的合并冲突。</target>
+</trans-unit>
+<trans-unit id="s1ed73aa59051a6a6">
+  <source>The project has been merged successfully.</source>
+  <target>项目已成功合并。</target>
+</trans-unit>
+<trans-unit id="s899bb342c48105c8">
+  <source>Resolve Conflicts</source>
+  <target>解决冲突</target>
+</trans-unit>
+<trans-unit id="s091d3d07b5b3076f">
+  <source>OK</source>
+  <target>确定</target>
+</trans-unit>
+<trans-unit id="s3079d5986428d59a">
+  <source>Project Already Exists</source>
+  <target>项目已存在</target>
+</trans-unit>
+<trans-unit id="s4e97a160b3032828">
+  <source>A project with this identifier already exists. What would you like to do?</source>
+  <target>具有此标识符的项目已存在。您希望怎么做？</target>
+</trans-unit>
+<trans-unit id="s81a6d4be071237b2">
+  <source>Overwrite</source>
+  <target>覆盖</target>
+</trans-unit>
+<trans-unit id="s0e0a962e81f739c7">
+  <source>Merge</source>
+  <target>合并</target>
+</trans-unit>
+<trans-unit id="s9b62698f516ac411">
+  <source>Failed to resolve conflict</source>
+  <target>解决冲突失败</target>
+</trans-unit>
+<trans-unit id="s146992649590c5f0">
+  <source>A project with this identifier already exists</source>
+  <target>具有此标识符的项目已存在</target>
+</trans-unit>
+<trans-unit id="s47d515afd033d3df">
+  <source>Project not found</source>
+  <target>未找到项目</target>
+</trans-unit>
+<trans-unit id="s3648276a9970ff63">
+  <source>Project folder not found</source>
+  <target>未找到项目文件夹</target>
+</trans-unit>
+<trans-unit id="scda729652c6e3aeb">
+  <source>Import file not found</source>
+  <target>未找到导入文件</target>
+</trans-unit>
+<trans-unit id="sd4c9f0639f5f4729">
+  <source>Invalid option</source>
+  <target>无效选项</target>
+</trans-unit>
+<trans-unit id="s743e0754729e9146">
+  <source>File not found</source>
+  <target>未找到文件</target>
+</trans-unit>
+<trans-unit id="sdaecc3c29a27c5c5">
+  <source>An unknown error occurred</source>
+  <target>发生未知错误</target>
+</trans-unit>
 </body>
 </file>
 </xliff>

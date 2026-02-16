@@ -138,6 +138,78 @@
   <source>Spanish (Latin America)</source>
   <target>Испанский (Латиноамериканский)</target>
 </trans-unit>
+<trans-unit id="s1e13b5077e946068">
+  <source>Merged with Conflicts</source>
+  <target>Слияние с конфликтами</target>
+</trans-unit>
+<trans-unit id="sdf8d9b8999ba83fb">
+  <source>Merge Successful</source>
+  <target>Слияние выполнено успешно</target>
+</trans-unit>
+<trans-unit id="sb2523df0a5623b7a">
+  <source>The project has been merged, but there are merge conflicts that need to be resolved.</source>
+  <target>Проект был объединен, но есть конфликты слияния, которые необходимо разрешить.</target>
+</trans-unit>
+<trans-unit id="s1ed73aa59051a6a6">
+  <source>The project has been merged successfully.</source>
+  <target>Проект успешно объединен.</target>
+</trans-unit>
+<trans-unit id="s899bb342c48105c8">
+  <source>Resolve Conflicts</source>
+  <target>Разрешить конфликты</target>
+</trans-unit>
+<trans-unit id="s091d3d07b5b3076f">
+  <source>OK</source>
+  <target>ОК</target>
+</trans-unit>
+<trans-unit id="s3079d5986428d59a">
+  <source>Project Already Exists</source>
+  <target>Проект уже существует</target>
+</trans-unit>
+<trans-unit id="s4e97a160b3032828">
+  <source>A project with this identifier already exists. What would you like to do?</source>
+  <target>Проект с таким идентификатором уже существует. Что вы хотите сделать?</target>
+</trans-unit>
+<trans-unit id="s81a6d4be071237b2">
+  <source>Overwrite</source>
+  <target>Перезаписать</target>
+</trans-unit>
+<trans-unit id="s0e0a962e81f739c7">
+  <source>Merge</source>
+  <target>Объединить</target>
+</trans-unit>
+<trans-unit id="s9b62698f516ac411">
+  <source>Failed to resolve conflict</source>
+  <target>Не удалось разрешить конфликт</target>
+</trans-unit>
+<trans-unit id="s146992649590c5f0">
+  <source>A project with this identifier already exists</source>
+  <target>Проект с таким идентификатором уже существует</target>
+</trans-unit>
+<trans-unit id="s47d515afd033d3df">
+  <source>Project not found</source>
+  <target>Проект не найден</target>
+</trans-unit>
+<trans-unit id="s3648276a9970ff63">
+  <source>Project folder not found</source>
+  <target>Папка проекта не найдена</target>
+</trans-unit>
+<trans-unit id="scda729652c6e3aeb">
+  <source>Import file not found</source>
+  <target>Файл импорта не найден</target>
+</trans-unit>
+<trans-unit id="sd4c9f0639f5f4729">
+  <source>Invalid option</source>
+  <target>Неверная опция</target>
+</trans-unit>
+<trans-unit id="s743e0754729e9146">
+  <source>File not found</source>
+  <target>Файл не найден</target>
+</trans-unit>
+<trans-unit id="sdaecc3c29a27c5c5">
+  <source>An unknown error occurred</source>
+  <target>Произошла неизвестная ошибка</target>
+</trans-unit>
 </body>
 </file>
 </xliff>
