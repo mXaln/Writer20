@@ -1,11 +1,13 @@
 /// <reference types="node" />
 import { vi } from 'vitest';
 import * as path from 'path';
+import {EventEmitter} from "events";
 
 // --- Internal State ---
 // We use a Map to simulate the disk
 const files = new Map<string, string>();
 const dirs = new Set<string>();
+const activeStreams = new Map<string, EventEmitter>();
 
 // Helper to normalize paths so Windows/Mac don't fight
 const n = (p: string) => path.normalize(p);
@@ -14,6 +16,7 @@ const n = (p: string) => path.normalize(p);
 export function __reset() {
     files.clear();
     dirs.clear();
+    activeStreams.clear();
 }
 export function __setFile(filePath: string, content: string) {
     files.set(n(filePath), content);
@@ -26,6 +29,9 @@ export function __getFile(filePath: string) {
 }
 export function __hasFile(filePath: string) {
     return files.has(n(filePath));
+}
+export function __getStream(filePath: string) {
+    return activeStreams.get(n(filePath));
 }
 
 // --- Mocked FS Methods ---
@@ -85,6 +91,34 @@ export const readdirSync = vi.fn((dirPath: string) => {
     return result;
 });
 
+export const copyFileSync = vi.fn((src: string, dest: string) => {
+    const content = files.get(n(src));
+    if (content === undefined) throw new Error(`ENOENT: no such file or directory, copyfile '${src}' -> '${dest}'`);
+    files.set(n(dest), content);
+});
+
+export const rmSync = vi.fn((p: string, options?: any) => {
+    const normalized = n(p);
+    // Simple recursive delete simulation
+    dirs.delete(normalized);
+    for (const key of files.keys()) {
+        if (key.startsWith(normalized)) files.delete(key);
+    }
+    for (const key of dirs.keys()) {
+        if (key.startsWith(normalized)) dirs.delete(key);
+    }
+});
+
+export const createWriteStream = vi.fn((p: string) => {
+    const emitter = new EventEmitter();
+    activeStreams.set(n(p), emitter);
+    (emitter as any).write = vi.fn();
+    (emitter as any).end = vi.fn();
+    (emitter as any).close = vi.fn();
+    // Simulate stream lifecycle events if needed
+    return emitter;
+});
+
 export default {
     existsSync,
     mkdirSync,
@@ -92,5 +126,14 @@ export default {
     readFileSync,
     unlinkSync,
     statSync,
-    readdirSync
+    readdirSync,
+    copyFileSync,
+    rmSync,
+    createWriteStream,
+    __reset,
+    __setFile,
+    __setDir,
+    __getFile,
+    __hasFile,
+    __getStream
 };
