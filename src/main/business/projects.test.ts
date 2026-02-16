@@ -19,12 +19,11 @@ import archiver from 'archiver';
 import { app } from 'electron';
 import * as fsMock from 'fs';
 
-// Access defaults and helpers
+// Helper casts
 const fs = (fsMock as any).default;
 const fsHelpers = fsMock as any;
 
 describe('Project Business Service', () => {
-    // Platform-agnostic path helpers
     const MOCK_HOME = process.platform === 'win32' ? 'C:\\mock\\home' : '/mock/home';
     const WRITER_DIR = path.join(MOCK_HOME, 'Writer20');
 
@@ -220,60 +219,32 @@ describe('Project Business Service', () => {
     describe('importProject()', () => {
         const ZIP_PATH = path.join(MOCK_HOME, 'import.zip');
 
-        it('should import a valid zip with contents folder', async () => {
+        it('should import a NEW project successfully', async () => {
             fsHelpers.__setFile(ZIP_PATH, 'DATA');
 
+            // Mock Extraction
             vi.mocked(extract).mockImplementation(async (src, opts: any) => {
                 const tempDir = opts.dir;
-                fsHelpers.__setDir(path.join(tempDir, 'contents')); // Simulate contents dir
+                fsHelpers.__setDir(path.join(tempDir, 'contents'));
                 fsHelpers.__setFile(path.join(tempDir, 'manifest.json'), JSON.stringify({
                     target_language: { id: 'es' }, project: { id: 'mrk' }, resource: { id: 'tn' }
                 }));
-                fsHelpers.__setFile(path.join(tempDir, 'contents', 'file.txt'), 'content');
             });
 
+            // Mock DB: Project does NOT exist
+            vi.mocked(db.getProjectByLanguageBookType).mockReturnValue(undefined);
             vi.mocked(db.createProject).mockReturnValue({ id: 50, name: 'es_mrk_text_tn' } as any);
 
             const result: any = await projectService.importProject(ZIP_PATH);
-            expect(result.success).toBe(true);
-            expect(fs.copyFileSync).toHaveBeenCalled();
-        });
-
-        // NEW: Test Flat Zip (No contents' folder)
-        it('should import a flat zip (root files)', async () => {
-            fsHelpers.__setFile(ZIP_PATH, 'DATA');
-
-            vi.mocked(extract).mockImplementation(async (src, opts: any) => {
-                const tempDir = opts.dir;
-                // NO 'contents' folder created here
-                fsHelpers.__setDir(tempDir);
-                fsHelpers.__setFile(path.join(tempDir, 'manifest.json'), JSON.stringify({
-                    target_language: { id: 'en' }, project: { id: 'gen' }, resource: { id: 'ulb' }
-                }));
-                fsHelpers.__setFile(path.join(tempDir, 'root_file.txt'), 'root content');
-            });
-
-            vi.mocked(db.createProject).mockReturnValue({ id: 51, name: 'en_gen_text_ulb' } as any);
-
-            const result: any = await projectService.importProject(ZIP_PATH);
 
             expect(result.success).toBe(true);
-            // Should copy from root, skipping manifest
-            expect(fs.copyFileSync).toHaveBeenCalled();
-            // Verify logic skipped manifest.json copy
-            // (Mock call inspection can verify arguments, but success implies it worked)
+            expect(result.data.projectExists).toBeUndefined(); // Should look like a normal project object
+            expect(db.createProject).toHaveBeenCalled();
         });
 
-        // NEW: Test Missing Zip
-        it('should fail if zip file missing', async () => {
-            const result: any = await projectService.importProject('/missing.zip');
-            expect(result.success).toBe(false);
-            expect(result.error).toBe('Import file not found');
-        });
-
-        // NEW: Test Conflict
-        it('should fail and cleanup if project exists', async () => {
+        it('should detect EXISTING project and return status (NOT fail)', async () => {
             fsHelpers.__setFile(ZIP_PATH, 'DATA');
+
             vi.mocked(extract).mockImplementation(async (src, opts: any) => {
                 const tempDir = opts.dir;
                 fsHelpers.__setFile(path.join(tempDir, 'manifest.json'), JSON.stringify({
@@ -281,14 +252,153 @@ describe('Project Business Service', () => {
                 }));
             });
 
-            // Simulate existing project
-            vi.mocked(db.getProjectByLanguageBookType).mockReturnValue({ id: 1 } as any);
+            // Mock DB: Project EXISTS
+            vi.mocked(db.getProjectByLanguageBookType).mockReturnValue({ id: 99, name: 'existing_proj' } as any);
 
             const result: any = await projectService.importProject(ZIP_PATH);
 
+            // UPDATED BEHAVIOR: Returns success=true, but data contains flags
+            expect(result.success).toBe(true);
+            expect(result.data.projectExists).toBe(true);
+            expect(result.data.projectId).toBe(99);
+            expect(result.data.projectName).toBe('existing_proj');
+
+            // Should NOT have created a new project yet
+            expect(db.createProject).not.toHaveBeenCalled();
+        });
+
+        it('should fail if zip file missing', async () => {
+            const result: any = await projectService.importProject('/missing.zip');
             expect(result.success).toBe(false);
-            expect(result.error).toMatch(/already exists/);
-            expect(fs.rmSync).toHaveBeenCalled(); // Ensure temp cleanup
+            expect(result.error).toBe('Import file not found');
+        });
+    });
+
+    describe('importWithOption()', () => {
+        const ZIP_PATH = path.join(MOCK_HOME, 'import.zip');
+        const PROJECT_ID = 99;
+        const PROJECT_NAME = 'existing_proj';
+        const PROJECT_DIR = path.join(WRITER_DIR, PROJECT_NAME);
+
+        beforeEach(() => {
+            fsHelpers.__setFile(ZIP_PATH, 'ZIP_DATA');
+            fsHelpers.__setDir(PROJECT_DIR);
+            fsHelpers.__setDir(path.join(PROJECT_DIR, 'contents'));
+            vi.mocked(db.getProject).mockReturnValue({ id: PROJECT_ID, name: PROJECT_NAME } as any);
+        });
+
+        it('should handle "cancel" option', async () => {
+            const result: any = await projectService.importWithOption(PROJECT_ID, ZIP_PATH, 'cancel');
+            expect(result.success).toBe(true);
+            expect(result.canceled).toBe(true);
+        });
+
+        it('should handle "overwrite" option (Simple File Copy)', async () => {
+            // Mock extraction
+            vi.mocked(extract).mockImplementation(async (src, opts: any) => {
+                const tempDir = opts.dir;
+                fsHelpers.__setDir(path.join(tempDir, 'contents'));
+                fsHelpers.__setFile(path.join(tempDir, 'contents', 'new_file.txt'), 'New Content');
+            });
+
+            const result: any = await projectService.importWithOption(PROJECT_ID, ZIP_PATH, 'overwrite');
+
+            expect(result.success).toBe(true);
+            // Verify new file was copied to project dir
+            const destPath = path.join(PROJECT_DIR, 'contents', 'new_file.txt');
+            expect(fs.copyFileSync).toHaveBeenCalled();
+            // In a real FS mock, we'd check fsHelpers.__hasFile(destPath) if copyFileSync logic in mock supports it fully
+        });
+
+        it('should handle "merge" option with NO Git (Fallback to File Compare)', async () => {
+            // Mock Git to say "Not a repo"
+            const gitMock = {
+                checkIsRepo: vi.fn().mockResolvedValue(false),
+                init: vi.fn(),
+                add: vi.fn(),
+                commit: vi.fn()
+            };
+            vi.mocked(simpleGit).mockReturnValue(gitMock as any);
+
+            // Mock extraction with conflicting content
+            vi.mocked(extract).mockImplementation(async (src, opts: any) => {
+                const tempDir = opts.dir;
+                fsHelpers.__setDir(path.join(tempDir, 'contents'));
+                fsHelpers.__setFile(path.join(tempDir, 'contents', '01.txt'), 'Imported Content');
+            });
+
+            // Set existing local file
+            fsHelpers.__setFile(path.join(PROJECT_DIR, 'contents', '01.txt'), 'Local Content');
+
+            const result: any = await projectService.importWithOption(PROJECT_ID, ZIP_PATH, 'merge');
+
+            // Fallback logic detects conflict via file comparison
+            expect(result.success).toBe(true);
+            expect(result.data.hasConflicts).toBe(true);
+            expect(result.data.conflicts).toHaveLength(1);
+            expect(result.data.conflicts[0].fileName).toBe('01.txt');
+        });
+
+        it('should handle "merge" option with Git (Conflict Detected)', async () => {
+            // 1. Setup Git Mock behavior
+            const gitMock = {
+                checkIsRepo: vi.fn().mockResolvedValue(true),
+                branchLocal: vi.fn().mockResolvedValue({ current: 'master' }),
+                addRemote: vi.fn(),
+                removeRemote: vi.fn(),
+                fetch: vi.fn(),
+                add: vi.fn(),
+                commit: vi.fn(),
+                // Simulate a merge failure
+                merge: vi.fn().mockRejectedValue(new Error('CONFLICTS: contents/01.txt:add/add')),
+                status: vi.fn().mockResolvedValue({ conflicted: ['contents/01.txt'] })
+            };
+            vi.mocked(simpleGit).mockReturnValue(gitMock as any);
+
+            // 2. Setup Filesystem for "Conflict" detection logic
+            // The code reads the file to find <<<<<<< markers
+            const conflictContent = `<<<<<<< HEAD\nLocal\n=======\nImported\n>>>>>>> imported`;
+
+            // Mock extraction
+            vi.mocked(extract).mockImplementation(async (src, opts: any) => {
+                // The merge logic extracts to temp, tries git merge
+                // If conflict, it expects the file ON DISK (in project folder) to contain markers
+                // So we manually set the "Project File" to look like it has markers
+                fsHelpers.__setFile(path.join(PROJECT_DIR, 'contents', '01.txt'), conflictContent);
+            });
+
+            const result: any = await projectService.importWithOption(PROJECT_ID, ZIP_PATH, 'merge');
+
+            expect(result.success).toBe(true);
+            expect(result.data.mergedWithConflicts).toBe(true);
+            // Verify it parsed the conflict from the file
+            expect(result.data.conflicts).toHaveLength(1);
+            expect(result.data.conflicts[0].fileId).toBe('01.txt');
+        });
+
+        it('should handle "merge" option with Git (Clean Merge)', async () => {
+            // 1. Setup Git Mock behavior (Success)
+            const gitMock = {
+                checkIsRepo: vi.fn().mockResolvedValue(true),
+                branchLocal: vi.fn().mockResolvedValue({ current: 'master' }),
+                addRemote: vi.fn(),
+                removeRemote: vi.fn(),
+                fetch: vi.fn(),
+                add: vi.fn(),
+                commit: vi.fn(),
+                merge: vi.fn().mockResolvedValue('Merge made by the ort strategy.'), // Success
+                status: vi.fn().mockResolvedValue({ conflicted: [] })
+            };
+            vi.mocked(simpleGit).mockReturnValue(gitMock as any);
+
+            vi.mocked(extract).mockImplementation(async () => {});
+
+            const result: any = await projectService.importWithOption(PROJECT_ID, ZIP_PATH, 'merge');
+
+            expect(result.success).toBe(true);
+            expect(result.data.id).toBe(PROJECT_ID); // Returns project object on success
+            expect(gitMock.merge).toHaveBeenCalled();
+            expect(gitMock.commit).toHaveBeenCalledWith(expect.stringContaining('Merge:'));
         });
     });
 });

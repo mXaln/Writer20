@@ -38,10 +38,11 @@ describe('File Service', () => {
         setupValidProject();
     });
 
+    // --- EXISTING TESTS ---
+
     describe('create()', () => {
         it('should create 01.txt if folder is empty', () => {
             const result = fileService.create(1);
-
             expect(result.success).toBe(true);
             expect(result.data?.name).toBe('01.txt');
             expect(fsHelpers.__hasFile(path.join(MOCK_CONTENTS_PATH, '01.txt'))).toBe(true);
@@ -60,12 +61,9 @@ describe('File Service', () => {
             expect(result.data?.name).toBe('02.txt');
         });
 
-        it('should create contents folder if missing', () => {
-            // Reset state specific for this test
+        it('should create contents folder if missing (via helper)', () => {
             fsHelpers.__reset();
-            fsHelpers.__setDir(MOCK_PROJECT_PATH);
-            // We intentionally do NOT create MOCK_CONTENTS_PATH here
-
+            fsHelpers.__setDir(MOCK_PROJECT_PATH); // No MOCK_CONTENTS_PATH
             const result = fileService.create(1);
 
             expect(result.success).toBe(true);
@@ -80,11 +78,7 @@ describe('File Service', () => {
         });
 
         it('should handle system errors gracefully', () => {
-            // Mock implementation once so it doesn't leak
-            vi.mocked(fs.readdirSync).mockImplementationOnce(() => {
-                throw new Error('Disk full');
-            });
-
+            vi.mocked(fs.readdirSync).mockImplementationOnce(() => { throw new Error('Disk full'); });
             const result = fileService.create(1);
             expect(result.success).toBe(false);
             expect(result.error).toBe('Disk full');
@@ -142,7 +136,6 @@ describe('File Service', () => {
             vi.mocked(git.commit).mockRejectedValueOnce(new Error('Git failure'));
 
             const result = await fileService.write(p, 'Data');
-            // Write should still succeed even if git fails
             expect(result.success).toBe(true);
         });
 
@@ -168,20 +161,22 @@ describe('File Service', () => {
         });
 
         it('should return empty list if folder missing', () => {
-            // FIX: Don't mock implementation. Manipulate state instead.
             fsHelpers.__reset();
             fsHelpers.__setDir(MOCK_PROJECT_PATH);
-            // We do NOT add MOCK_CONTENTS_PATH.
-            // fs.existsSync(contents) will return false naturally.
 
             const result = fileService.list(1);
             expect(result.success).toBe(true);
             expect(result.data).toEqual([]);
         });
 
+        it('should return error if project missing', () => {
+            vi.mocked(db.getProject).mockReturnValue(null);
+            const result = fileService.list(99);
+            expect(result.success).toBe(false);
+        });
+
         it('should handle fs errors', () => {
             vi.mocked(fs.readdirSync).mockImplementationOnce(() => { throw new Error('Err'); });
-
             const result = fileService.list(1);
             expect(result.success).toBe(false);
         });
@@ -214,12 +209,16 @@ describe('File Service', () => {
             expect(file1.content).toBe('');
         });
 
+        it('should return error if project missing', () => {
+            vi.mocked(db.getProject).mockReturnValue(null);
+            const result = fileService.listWithContent(99);
+            expect(result.success).toBe(false);
+            expect(result.error).toBe('Project not found');
+        });
+
         it('should handle errors', () => {
-            // Create a file so it tries to read
             const p = path.join(MOCK_CONTENTS_PATH, '01.txt');
             fsHelpers.__setFile(p, 'data');
-
-            // Mock read failure
             vi.mocked(fs.readFileSync).mockImplementationOnce(() => { throw new Error('Err'); });
 
             const result = fileService.listWithContent(1);
@@ -238,10 +237,18 @@ describe('File Service', () => {
         });
 
         it('should return error if file missing', async () => {
-            // Ensure state is clean (no file exists)
             const result = await fileService.open('/missing.txt');
             expect(result.success).toBe(false);
             expect(result.error).toBe('File not found');
+        });
+
+        it('should handle errors', async () => {
+            const p = '/test/file.txt';
+            fsHelpers.__setFile(p, 'content');
+            vi.mocked(shell.openPath).mockRejectedValueOnce(new Error('OS Err'));
+
+            const result = await fileService.open(p);
+            expect(result.success).toBe(false);
         });
     });
 
@@ -253,6 +260,15 @@ describe('File Service', () => {
             const result = fileService.remove(p, true);
             expect(result.success).toBe(true);
             expect(fsHelpers.__hasFile(p)).toBe(false);
+        });
+
+        it('should not delete from disk if flag is false', () => {
+            const p = '/test/del.txt';
+            fsHelpers.__setFile(p, 'data');
+
+            const result = fileService.remove(p, false);
+            expect(result.success).toBe(true);
+            expect(fsHelpers.__hasFile(p)).toBe(true);
         });
 
         it('should return error if file does not exist', () => {
@@ -269,6 +285,107 @@ describe('File Service', () => {
             const result = fileService.remove(p, true);
             expect(result.success).toBe(false);
             expect(result.error).toBe('Locked');
+        });
+    });
+
+    // --- NEW TESTS FOR CONFLICTS ---
+
+    describe('getConflictedFiles()', () => {
+        it('should return empty array if project not found', () => {
+            vi.mocked(db.getProject).mockReturnValue(null);
+            const files = fileService.getConflictedFiles(99);
+            expect(files).toEqual([]);
+        });
+
+        it('should return empty array if contents folder missing', () => {
+            fsHelpers.__reset();
+            fsHelpers.__setDir(MOCK_PROJECT_PATH);
+            const files = fileService.getConflictedFiles(1);
+            expect(files).toEqual([]);
+        });
+
+        it('should find files containing git conflict markers', () => {
+            // Setup files
+            const conflictContent = `<<<<<<< HEAD\nLocal changes\n=======\nRemote changes\n>>>>>>> remote`;
+            fsHelpers.__setFile(path.join(MOCK_CONTENTS_PATH, '01.txt'), 'Normal content');
+            fsHelpers.__setFile(path.join(MOCK_CONTENTS_PATH, '02.txt'), conflictContent);
+            fsHelpers.__setFile(path.join(MOCK_CONTENTS_PATH, '03.md'), conflictContent); // Should ignore non .txt
+
+            const files = fileService.getConflictedFiles(1);
+
+            expect(files).toEqual(['02.txt']);
+        });
+    });
+
+    describe('resolveConflict()', () => {
+        it('should return error if file missing', async () => {
+            const result = await fileService.resolveConflict('/missing.txt', 'data', 1);
+            expect(result.success).toBe(false);
+            expect(result.error).toBe('File not found');
+        });
+
+        it('should resolve conflict and commit if no other conflicts exist', async () => {
+            const p = path.join(MOCK_CONTENTS_PATH, '02.txt');
+            fsHelpers.__setFile(p, '<<<<<<< ======= >>>>>>>'); // Starts conflicted
+
+            // We write the accepted content which removes markers
+            const result = await fileService.resolveConflict(p, 'Clean Content', 1);
+
+            expect(result.success).toBe(true);
+            expect(fsHelpers.__getFile(p)).toBe('Clean Content');
+
+            const git = simpleGit();
+            expect(git.add).toHaveBeenCalled();
+            expect(git.commit).toHaveBeenCalledWith('Resolved merge conflicts');
+            // Since it was the only conflict, mergeComplete is true
+            expect((result as any).mergeComplete).toBe(true);
+        });
+
+        it('should resolve conflict but NOT commit if other conflicts remain', async () => {
+            const p1 = path.join(MOCK_CONTENTS_PATH, '01.txt');
+            const p2 = path.join(MOCK_CONTENTS_PATH, '02.txt');
+
+            fsHelpers.__setFile(p1, '<<<<<<< ======= >>>>>>>'); // Conflict 1
+            fsHelpers.__setFile(p2, '<<<<<<< ======= >>>>>>>'); // Conflict 2
+
+            // Resolve file 1
+            const result = await fileService.resolveConflict(p1, 'Clean Content', 1);
+
+            expect(result.success).toBe(true);
+            expect(fsHelpers.__getFile(p1)).toBe('Clean Content'); // File updated
+
+            const git = simpleGit();
+            expect(git.add).toHaveBeenCalled();
+            // Should NOT commit because p2 is still conflicted
+            expect(git.commit).not.toHaveBeenCalled();
+            expect((result as any).mergeComplete).toBe(false);
+        });
+
+        it('should handle missing project gracefully during git ops', async () => {
+            const p = path.join(MOCK_CONTENTS_PATH, '01.txt');
+            fsHelpers.__setFile(p, 'data');
+
+            // Delete project right before git operations
+            vi.mocked(db.getProject).mockReturnValue(null);
+
+            const result = await fileService.resolveConflict(p, 'Clean Content', 1);
+
+            expect(result.success).toBe(true);
+            expect((result as any).mergeComplete).toBe(false);
+            expect(fsHelpers.__getFile(p)).toBe('Clean Content');
+        });
+
+        it('should handle git errors gracefully', async () => {
+            const p = path.join(MOCK_CONTENTS_PATH, '01.txt');
+            fsHelpers.__setFile(p, 'data');
+
+            const git = simpleGit();
+            vi.mocked(git.add).mockRejectedValueOnce(new Error('Git fail'));
+
+            const result = await fileService.resolveConflict(p, 'Clean Content', 1);
+
+            expect(result.success).toBe(false);
+            expect(result.error).toBe('Git fail');
         });
     });
 });
