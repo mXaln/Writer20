@@ -228,6 +228,7 @@ export class WorkflowScreen extends LitElement {
         super.connectedCallback();
         await this.loadProject();
         await this.loadFiles();
+        await this.loadPersistedConflicts();
         
         // Notify parent that workflow is loaded (to pass any pending conflicts)
         this.dispatchEvent(new CustomEvent('workflow-loaded', {bubbles: true, composed: true}));
@@ -254,6 +255,15 @@ export class WorkflowScreen extends LitElement {
                 for (const file of this.files) {
                     if (file.content !== undefined && !this.fileContents.has(file.id)) {
                         this.fileContents.set(file.id, file.content);
+                        
+                        // Check for conflict markers in content
+                        if (file.content && this.hasConflictMarkers(file.content)) {
+                            const conflict = this.parseConflictMarkers(file.content, file);
+                            if (conflict) {
+                                this.conflicts.set(file.id, conflict);
+                                this.hasConflicts = true;
+                            }
+                        }
                     }
                 }
             }
@@ -261,6 +271,81 @@ export class WorkflowScreen extends LitElement {
             console.error('Failed to load files:', error);
         } finally {
             this.loading = false;
+        }
+    }
+
+    private hasConflictMarkers(content: string): boolean {
+        return content.includes('<<<<<<<') && content.includes('=======') && content.includes('>>>>>>>');
+    }
+
+    private parseConflictMarkers(content: string, file: FileItem): FileConflict | null {
+        const lines = content.split('\n');
+        let currentLines: string[] = [];
+        let importedLines: string[] = [];
+        let inCurrent = false;
+        let inImported = false;
+
+        for (const line of lines) {
+            if (line.startsWith('<<<<<<<')) {
+                inCurrent = true;
+                inImported = false;
+            } else if (line.startsWith('=======')) {
+                inCurrent = false;
+                inImported = true;
+            } else if (line.startsWith('>>>>>>>')) {
+                inImported = false;
+            } else if (inCurrent) {
+                currentLines.push(line);
+            } else if (inImported) {
+                importedLines.push(line);
+            }
+        }
+
+        if (currentLines.length > 0 || importedLines.length > 0) {
+            return {
+                fileId: file.id,
+                fileName: file.name,
+                filePath: file.path,
+                currentContent: currentLines.join('\n'),
+                importedContent: importedLines.join('\n')
+            };
+        }
+        
+        return null;
+    }
+
+    private async loadPersistedConflicts() {
+        try {
+            const result = await window.electronAPI.getConflictedFiles(this.projectId);
+            if (result.success && result.data && result.data.length > 0) {
+                const conflictedFileIds = result.data as string[];
+                
+                // Load content for each conflicted file and parse markers
+                for (const fileId of conflictedFileIds) {
+                    const file = this.files.find(f => f.id === fileId);
+                    if (file) {
+                        // Try to read the file content
+                        const contentResult = await window.electronAPI.readFile(file.path);
+                        if (contentResult.success && contentResult.data) {
+                            const content = contentResult.data;
+                            
+                            // Check if content has conflict markers
+                            if (this.hasConflictMarkers(content)) {
+                                const conflict = this.parseConflictMarkers(content, file);
+                                if (conflict) {
+                                    this.conflicts.set(file.id, conflict);
+                                    this.hasConflicts = true;
+                                }
+                            } else {
+                                // No conflict markers - file was manually resolved, remove from persisted list
+                                // This will be cleaned up by resolveConflict call
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load persisted conflicts:', error);
         }
     }
 
@@ -282,7 +367,7 @@ export class WorkflowScreen extends LitElement {
         const {file, acceptedContent} = e.detail;
         
         try {
-            const result = await window.electronAPI.resolveConflict(file.path, acceptedContent);
+            const result = await window.electronAPI.resolveConflict(file.path, acceptedContent, this.projectId);
             if (result.success) {
                 // Remove from conflicts
                 this.conflicts = new Map(this.conflicts);

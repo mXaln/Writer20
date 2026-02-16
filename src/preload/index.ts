@@ -16,8 +16,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('project:export', id),
   importProject: () =>
     ipcRenderer.invoke('project:import'),
-  resolveConflict: (filePath: string, acceptedContent: string) =>
-    ipcRenderer.invoke('project:resolveConflict', filePath, acceptedContent),
+  resolveConflict: (filePath: string, acceptedContent: string, projectId: number) =>
+    ipcRenderer.invoke('project:resolveConflict', filePath, acceptedContent, projectId),
+  getConflictedFiles: (projectId: number) =>
+    ipcRenderer.invoke('project:getConflictedFiles', projectId),
+  importWithOption: (projectId: number, zipPath: string, option: 'overwrite' | 'ff' | 'cancel') =>
+    ipcRenderer.invoke('project:importWithOption', projectId, zipPath, option),
 
   // File operations
   addFiles: (projectId: number) =>

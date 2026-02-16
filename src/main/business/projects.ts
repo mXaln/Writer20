@@ -190,79 +190,408 @@ export async function importProject(zipPath: string) {
             return await importProjectNew(language, book, resource, zipPath);
         }
 
-        // Project exists - check for conflicts
-        const projectFolder = path.join(app.getPath('home'), 'Writer20', existing.name);
-        const contentsFolder = path.join(projectFolder, 'contents');
+        // Project exists - return that it exists and needs user choice
+        // Don't do any merge yet - just tell the frontend the project exists
+        fs.rmSync(tempFolder, { recursive: true, force: true });
         
-        // Get existing files
-        const existingFiles = fs.existsSync(contentsFolder) 
-            ? fs.readdirSync(contentsFolder).filter(f => f.endsWith('.txt'))
-            : [];
+        return {
+            success: true,
+            data: {
+                projectExists: true,
+                projectId: existing.id,
+                projectName: existing.name,
+                zipPath: zipPath
+            }
+        };
+    } catch (error: any) {
+        log.error('Error importing project:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+function detectGitConflicts(projectFolder: string, conflictFiles: string[]): Array<{
+    fileId: string;
+    fileName: string;
+    filePath: string;
+    currentContent: string;
+    importedContent: string;
+}> {
+    const conflicts: Array<{
+        fileId: string;
+        fileName: string;
+        filePath: string;
+        currentContent: string;
+        importedContent: string;
+    }> = [];
+    
+    const contentsFolder = path.join(projectFolder, 'contents');
+    
+    for (const file of conflictFiles) {
+        const filePath = path.join(contentsFolder, file);
+        if (fs.existsSync(filePath)) {
+            const content = fs.readFileSync(filePath, 'utf-8');
+            
+            // Parse conflict markers
+            const { current, imported } = parseGitConflictMarkers(content);
+            
+            if (current || imported) {
+                conflicts.push({
+                    fileId: file,
+                    fileName: file,
+                    filePath: filePath,
+                    currentContent: current || '',
+                    importedContent: imported || ''
+                });
+            }
+        }
+    }
+    
+    return conflicts;
+}
+
+function parseGitConflictMarkers(content: string): { current: string | null; imported: string | null } {
+    const lines = content.split('\n');
+    let current: string[] = [];
+    let imported: string[] = [];
+    let inCurrent = false;
+    let inImported = false;
+    
+    for (const line of lines) {
+        if (line.startsWith('<<<<<<<')) {
+            inCurrent = true;
+            inImported = false;
+        } else if (line.startsWith('=======')) {
+            inCurrent = false;
+            inImported = true;
+        } else if (line.startsWith('>>>>>>>')) {
+            inImported = false;
+        } else if (inCurrent) {
+            current.push(line);
+        } else if (inImported) {
+            imported.push(line);
+        }
+    }
+    
+    return {
+        current: current.length > 0 ? current.join('\n') : null,
+        imported: imported.length > 0 ? imported.join('\n') : null
+    };
+}
+
+// Fallback: Simple file comparison when git merge fails
+async function importProjectWithFileMerge(projectId: number, zipPath: string): Promise<{success: boolean; data?: any; error?: string}> {
+    const tempFolder = path.join(app.getPath('temp'), `writer20-import-${Date.now()}`);
+    fs.mkdirSync(tempFolder, { recursive: true });
+    
+    await extract(zipPath, { dir: tempFolder });
+    
+    const project = db.getProject(projectId);
+    if (!project) {
+        fs.rmSync(tempFolder, { recursive: true, force: true });
+        return { success: false, error: 'Project not found' };
+    }
+    
+    const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
+    const contentsFolder = path.join(projectFolder, 'contents');
+    
+    // Get existing files
+    const existingFiles = fs.existsSync(contentsFolder)
+        ? fs.readdirSync(contentsFolder).filter(f => f.endsWith('.txt'))
+        : [];
+    
+    // Get imported files
+    const tempContentsFolder = path.join(tempFolder, 'contents');
+    let importedFiles: string[] = [];
+    if (fs.existsSync(tempContentsFolder)) {
+        importedFiles = fs.readdirSync(tempContentsFolder).filter(f => f.endsWith('.txt'));
+    } else {
+        importedFiles = fs.readdirSync(tempFolder)
+            .filter(f => f.endsWith('.txt') && f !== 'manifest.json');
+    }
+    
+    // Find conflicts (files that exist in both and have different content)
+    const conflicts: Array<{
+        fileId: string;
+        fileName: string;
+        filePath: string;
+        currentContent: string;
+        importedContent: string;
+    }> = [];
+    
+    for (const fileName of importedFiles) {
+        const importedPath = fs.existsSync(tempContentsFolder)
+            ? path.join(tempContentsFolder, fileName)
+            : path.join(tempFolder, fileName);
         
-        // Get imported files
-        const tempContentsFolder = path.join(tempFolder, 'contents');
-        let importedFiles: string[] = [];
-        if (fs.existsSync(tempContentsFolder)) {
-            importedFiles = fs.readdirSync(tempContentsFolder).filter(f => f.endsWith('.txt'));
-        } else {
-            importedFiles = fs.readdirSync(tempFolder)
-                .filter(f => f.endsWith('.txt') && f !== 'manifest.json');
+        const existingPath = path.join(contentsFolder, fileName);
+        
+        if (existingFiles.includes(fileName)) {
+            const existingContent = fs.existsSync(existingPath)
+                ? fs.readFileSync(existingPath, 'utf-8')
+                : '';
+            const importedContent = fs.readFileSync(importedPath, 'utf-8');
+            
+            if (existingContent !== importedContent) {
+                conflicts.push({
+                    fileId: fileName,
+                    fileName: fileName,
+                    filePath: existingPath,
+                    currentContent: existingContent,
+                    importedContent: importedContent
+                });
+            }
+        }
+    }
+    
+    fs.rmSync(tempFolder, { recursive: true, force: true });
+    
+    if (conflicts.length > 0) {
+        // Store conflicted files marker
+        const conflictsMarkerPath = path.join(projectFolder, '.conflicts');
+        fs.writeFileSync(conflictsMarkerPath, JSON.stringify(conflicts.map(c => c.fileId)), 'utf-8');
+        
+        return {
+            success: true,
+            data: {
+                hasConflicts: true,
+                projectId: project.id,
+                conflicts: conflicts,
+                mergeFailed: false
+            }
+        };
+    }
+    
+    // No conflicts - merge
+    return await importProjectMerge(projectId, zipPath);
+}
+
+export async function importWithOption(projectId: number, zipPath: string, option: 'overwrite' | 'merge' | 'cancel') {
+    if (option === 'cancel') {
+        return { success: true, canceled: true };
+    }
+    
+    if (option === 'overwrite') {
+        // Overwrite local files with imported version
+        return await importProjectMerge(projectId, zipPath);
+    }
+    
+    if (option === 'merge') {
+        // Try git merge to detect conflicts
+        const project = db.getProject(projectId);
+        if (!project) {
+            return { success: false, error: 'Project not found' };
+        }
+        
+        const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
+        
+        // Create temp folder for extraction
+        const tempFolder = path.join(app.getPath('temp'), `writer20-import-${Date.now()}`);
+        fs.mkdirSync(tempFolder, { recursive: true });
+        
+        try {
+            // Extract ZIP
+            await extract(zipPath, { dir: tempFolder });
+            
+            // Initialize git if needed
+            let git;
+            try {
+                git = simpleGit(projectFolder);
+                const isRepo = await git.checkIsRepo();
+                if (!isRepo) {
+                    await git.init();
+                    await git.add('.');
+                    await git.commit('Initial commit');
+                }
+            } catch (gitError: any) {
+                log.error(`Git init error: ${gitError.message}`);
+                // Fall back to simple file comparison
+                fs.rmSync(tempFolder, { recursive: true, force: true });
+                return await importProjectWithFileMerge(projectId, zipPath);
+            }
+            
+            // Get current branch
+            let mainBranch: string;
+            try {
+                const branchResult = await git.branchLocal();
+                mainBranch = branchResult.current === 'main' ? 'main' : 'master';
+            } catch {
+                mainBranch = 'master';
+            }
+            
+            // Create a branch for the imported content
+            const importBranchName = `import-${Date.now()}`;
+            
+            const contentsFolder = path.join(projectFolder, 'contents');
+            
+            // Create branch and commit imported files
+            try {
+                // First, save current state and switch to import branch
+                await git.checkoutLocalBranch(importBranchName);
+                
+                // Now copy imported files to contents folder (on import branch)
+                const tempContentsFolder = path.join(tempFolder, 'contents');
+                
+                // Create contents folder if needed
+                if (!fs.existsSync(contentsFolder)) {
+                    fs.mkdirSync(contentsFolder, { recursive: true });
+                }
+                
+                // Copy files from extracted content to contents folder
+                if (fs.existsSync(tempContentsFolder)) {
+                    const files = fs.readdirSync(tempContentsFolder);
+                    for (const file of files) {
+                        const srcPath = path.join(tempContentsFolder, file);
+                        const destPath = path.join(contentsFolder, file);
+                        fs.copyFileSync(srcPath, destPath);
+                    }
+                } else {
+                    const files = fs.readdirSync(tempFolder);
+                    for (const file of files) {
+                        if (file !== 'manifest.json') {
+                            const srcPath = path.join(tempFolder, file);
+                            const destPath = path.join(contentsFolder, file);
+                            if (fs.statSync(srcPath).isFile()) {
+                                fs.copyFileSync(srcPath, destPath);
+                            }
+                        }
+                    }
+                }
+                
+                // Add all files and commit
+                await git.add('.');
+                const status = await git.status();
+                if (status.files.length > 0) {
+                    await git.commit(`Import: ${project.name}`);
+                }
+                
+                // Switch back to main branch (git restores main branch files to working dir)
+                await git.checkout(mainBranch);
+                
+                // Try to merge the import branch into main
+                // At this point, working dir has main branch files, import branch has imported files
+                const mergeResult = await git.merge([importBranchName]);
+                
+                // Check if there are conflicts
+                if (mergeResult.conflicts && mergeResult.conflicts.length > 0) {
+                    // There are merge conflicts! Get file paths from MergeConflict objects
+                    const conflictFilePaths = mergeResult.conflicts
+                        .filter(c => c.file)
+                        .map(c => path.basename(c.file!));
+                    const conflicts = detectGitConflicts(projectFolder, conflictFilePaths);
+                    
+                    // Clean up import branch
+                    try {
+                        await git.deleteLocalBranch(importBranchName, false);
+                    } catch (e) {
+                        // Ignore cleanup errors
+                    }
+                    
+                    // Store conflicted files in a marker file for persistence
+                    const conflictsMarkerPath = path.join(projectFolder, '.conflicts');
+                    fs.writeFileSync(conflictsMarkerPath, JSON.stringify(conflicts.map(c => c.fileId)), 'utf-8');
+                    
+                    fs.rmSync(tempFolder, { recursive: true, force: true });
+                    
+                    return {
+                        success: true,
+                        data: {
+                            mergedWithConflicts: true,
+                            projectId: project.id,
+                            conflicts: conflicts
+                        }
+                    };
+                }
+                
+                // No conflicts - clean up import branch
+                try {
+                    await git.deleteLocalBranch(importBranchName, false);
+                } catch (e) {
+                    // Ignore
+                }
+                
+                fs.rmSync(tempFolder, { recursive: true, force: true });
+                log.info(`Merged imported project ${project.name} from ${zipPath}`);
+                
+                return { success: true, data: project };
+                
+            } catch (mergeError: any) {
+                log.error(`Merge error: ${mergeError.message}`);
+                
+                // Clean up branch if it exists
+                try {
+                    await git.checkout(mainBranch);
+                    await git.deleteLocalBranch(importBranchName, false);
+                } catch (e) {
+                    // Ignore cleanup errors
+                }
+                
+                // Fall back to simple file comparison
+                fs.rmSync(tempFolder, { recursive: true, force: true });
+                return await importProjectWithFileMerge(projectId, zipPath);
+            }
+            
+        } catch (error: any) {
+            log.error('Merge import error:', error);
+            fs.rmSync(tempFolder, { recursive: true, force: true });
+            return { success: false, error: error.message };
+        }
+    }
+    
+    return { success: false, error: 'Invalid option' };
+}
+
+export function getConflictedFiles(projectId: number): string[] {
+    const project = db.getProject(projectId);
+    if (!project) {
+        return [];
+    }
+    
+    const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
+    const conflictsMarkerPath = path.join(projectFolder, '.conflicts');
+    
+    if (fs.existsSync(conflictsMarkerPath)) {
+        try {
+            return JSON.parse(fs.readFileSync(conflictsMarkerPath, 'utf-8'));
+        } catch {
+            return [];
+        }
+    }
+    
+    return [];
+}
+
+export async function resolveConflict(filePath: string, acceptedContent: string, projectId: number) {
+    try {
+        if (!fs.existsSync(filePath)) {
+            return { success: false, error: 'File not found' };
         }
 
-        // Find conflicts (files that exist in both and have different content)
-        const conflicts: Array<{
-            fileId: string;
-            fileName: string;
-            filePath: string;
-            currentContent: string;
-            importedContent: string;
-        }> = [];
-
-        for (const fileName of importedFiles) {
-            const importedPath = fs.existsSync(tempContentsFolder)
-                ? path.join(tempContentsFolder, fileName)
-                : path.join(tempFolder, fileName);
+        // Write the accepted content to the file
+        fs.writeFileSync(filePath, acceptedContent, 'utf-8');
+        
+        // Remove from conflicts marker
+        const project = db.getProject(projectId);
+        if (project) {
+            const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
+            const conflictsMarkerPath = path.join(projectFolder, '.conflicts');
             
-            const existingPath = path.join(contentsFolder, fileName);
-            
-            if (existingFiles.includes(fileName)) {
-                // File exists in both - compare content
-                const existingContent = fs.existsSync(existingPath) 
-                    ? fs.readFileSync(existingPath, 'utf-8') 
-                    : '';
-                const importedContent = fs.readFileSync(importedPath, 'utf-8');
+            if (fs.existsSync(conflictsMarkerPath)) {
+                const conflictedFiles = JSON.parse(fs.readFileSync(conflictsMarkerPath, 'utf-8')) as string[];
+                const fileName = path.basename(filePath);
+                const newConflictedFiles = conflictedFiles.filter(f => f !== fileName);
                 
-                if (existingContent !== importedContent) {
-                    conflicts.push({
-                        fileId: fileName,
-                        fileName: fileName,
-                        filePath: existingPath,
-                        currentContent: existingContent,
-                        importedContent: importedContent
-                    });
+                if (newConflictedFiles.length > 0) {
+                    fs.writeFileSync(conflictsMarkerPath, JSON.stringify(newConflictedFiles), 'utf-8');
+                } else {
+                    fs.unlinkSync(conflictsMarkerPath);
                 }
             }
         }
-
-        // Cleanup temp folder
-        fs.rmSync(tempFolder, { recursive: true, force: true });
-
-        if (conflicts.length > 0) {
-            // Return conflict information
-            return { 
-                success: true, 
-                data: {
-                    hasConflicts: true,
-                    projectId: existing.id,
-                    conflicts: conflicts
-                }
-            };
-        }
-
-        // No conflicts - merge silently (imported files overwrite existing)
-        return await importProjectMerge(existing.id, zipPath);
+        
+        log.info(`Resolved conflict for file: ${filePath}`);
+        return { success: true };
     } catch (error: any) {
-        log.error('Error importing project:', error);
+        log.error('Error resolving conflict:', error);
         return { success: false, error: error.message };
     }
 }
@@ -338,13 +667,24 @@ async function importProjectNew(language: string, book: string, resource: string
     };
     fs.writeFileSync(newManifestPath, JSON.stringify(manifest, null, 2));
 
+    // Initialize git repository
+    try {
+        const git = simpleGit(projectFolder);
+        await git.init();
+        await git.add('.');
+        await git.commit('Initial commit');
+        log.info(`Initialized git repository: ${projectFolder}`);
+    } catch (gitError: any) {
+        log.error(`Git init error: ${gitError.message}`);
+    }
+
     log.info(`Imported new project ${project.name} from ${zipPath}`);
 
     return { success: true, data: project };
 }
 
 async function importProjectMerge(projectId: number, zipPath: string): Promise<{success: boolean; data?: any; error?: string}> {
-    // Merge imported files into existing project
+    // Merge imported files into existing project (overwrite)
     const project = db.getProject(projectId);
     if (!project) {
         return { success: false, error: 'Project not found' };
@@ -357,6 +697,12 @@ async function importProjectMerge(projectId: number, zipPath: string): Promise<{
 
     const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
     const contentsFolder = path.join(projectFolder, 'contents');
+
+    // Remove conflicts marker if exists
+    const conflictsMarkerPath = path.join(projectFolder, '.conflicts');
+    if (fs.existsSync(conflictsMarkerPath)) {
+        fs.unlinkSync(conflictsMarkerPath);
+    }
 
     // Copy files from temp to contents folder (overwriting existing)
     const tempContentsFolder = path.join(tempFolder, 'contents');
@@ -384,21 +730,4 @@ async function importProjectMerge(projectId: number, zipPath: string): Promise<{
     log.info(`Merged imported project ${project.name} from ${zipPath}`);
 
     return { success: true, data: project };
-}
-
-export async function resolveConflict(filePath: string, acceptedContent: string) {
-    try {
-        if (!fs.existsSync(filePath)) {
-            return { success: false, error: 'File not found' };
-        }
-
-        // Write the accepted content to the file
-        fs.writeFileSync(filePath, acceptedContent, 'utf-8');
-        
-        log.info(`Resolved conflict for file: ${filePath}`);
-        return { success: true };
-    } catch (error: any) {
-        log.error('Error resolving conflict:', error);
-        return { success: false, error: error.message };
-    }
 }

@@ -5,7 +5,9 @@ import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
 import {localized, msg} from '@lit/localize';
 const {setLocale} = await import('../i18n/localization');
-import {Theme, Language, ImportConflictResult} from '../types';
+import {Theme, Language, ImportConflictResult, ImportOption, ProjectExistsResult, MergeResult} from '../types';
+import './project-exists-dialog';
+import './merge-result-dialog';
 
 type Screen = 'dashboard' | 'workflow' | 'settings';
 
@@ -132,7 +134,10 @@ export class AppShell extends LitElement {
     @state() private language: Language = 'en';
     @state() private currentProjectId: number | null = null;
     @state() private showMenu = false;
-    @state() private pendingConflicts: ImportConflictResult | null = null;
+    @state() private showProjectExistsDialog = false;
+    @state() private projectExistsResult: ProjectExistsResult | null = null;
+    @state() private showMergeResultDialog = false;
+    @state() private mergeResult: MergeResult | null = null;
 
     async connectedCallback() {
         super.connectedCallback();
@@ -209,18 +214,20 @@ export class AppShell extends LitElement {
         try {
             const result = await window.electronAPI.importProject();
             if (result.success && result.data) {
-                // Check if result is ImportConflictResult with conflicts
-                if (typeof result.data === 'object' && 'hasConflicts' in result.data) {
-                    const conflictResult = result.data as ImportConflictResult;
-                    if (conflictResult.hasConflicts && conflictResult.conflicts.length > 0) {
-                        // Store conflicts and navigate to workflow
-                        this.pendingConflicts = conflictResult;
-                        this.currentProjectId = conflictResult.projectId;
-                        this.currentScreen = 'workflow';
-                        return;
-                    }
+                // Check if result is ProjectExistsResult - project already exists
+                const data = result.data as any;
+                if (data.projectExists === true) {
+                    // Show the project exists dialog
+                    this.projectExistsResult = {
+                        projectExists: data.projectExists,
+                        projectId: data.projectId,
+                        projectName: data.projectName,
+                        zipPath: data.zipPath
+                    };
+                    this.showProjectExistsDialog = true;
+                    return;
                 }
-                // No conflicts - dispatch event to refresh dashboard
+                // New project imported successfully - dispatch event to refresh dashboard
                 this.dispatchEvent(new CustomEvent('projects-updated', {bubbles: true, composed: true}));
             } else if (result.error) {
                 console.error('Import failed:', result.error);
@@ -228,6 +235,75 @@ export class AppShell extends LitElement {
         } catch (error) {
             console.error('Failed to import project:', error);
         }
+    }
+
+    private async handleImportOption(e: CustomEvent<{option: ImportOption}>) {
+        const option = e.detail.option;
+        this.showProjectExistsDialog = false;
+        
+        if (!this.projectExistsResult) {
+            this.projectExistsResult = null;
+            return;
+        }
+        
+        const projectId = this.projectExistsResult.projectId;
+        const zipPath = this.projectExistsResult.zipPath;
+        
+        try {
+            const result = await window.electronAPI.importWithOption(projectId, zipPath, option);
+            
+            if (result.success) {
+                if ((result as any).canceled) {
+                    // User canceled
+                    this.projectExistsResult = null;
+                    return;
+                }
+                
+                if (result.data) {
+                    // Check if there are conflicts after merge
+                    if (typeof result.data === 'object' && 'mergedWithConflicts' in result.data) {
+                        const mergeResult = result.data as MergeResult;
+                        this.mergeResult = mergeResult;
+                        this.projectExistsResult = null;
+                        
+                        // Show merge result dialog
+                        this.showMergeResultDialog = true;
+                        return;
+                    }
+                    
+                    // For overwrite or merge without conflicts - show success dialog
+                    this.mergeResult = {
+                        mergedWithConflicts: false,
+                        projectId: projectId
+                    };
+                    this.projectExistsResult = null;
+                    this.showMergeResultDialog = true;
+                    return;
+                }
+            } else if (result.error) {
+                console.error('Import option failed:', result.error);
+            }
+        } catch (error) {
+            console.error('Failed to process import option:', error);
+        }
+        
+        this.projectExistsResult = null;
+    }
+
+    private handleMergeResultClosed(e: CustomEvent<{hasConflicts: boolean}>) {
+        this.showMergeResultDialog = false;
+        const hasConflicts = e.detail.hasConflicts;
+        
+        if (hasConflicts && this.mergeResult) {
+            // Navigate to workflow to resolve conflicts
+            this.currentProjectId = this.mergeResult.projectId;
+            this.currentScreen = 'workflow';
+        } else {
+            // Just refresh dashboard
+            this.dispatchEvent(new CustomEvent('projects-updated', {bubbles: true, composed: true}));
+        }
+        
+        this.mergeResult = null;
     }
 
     private toggleMenu() {
@@ -282,17 +358,6 @@ export class AppShell extends LitElement {
                                 .projectId=${this.currentProjectId}
                                 @navigate-back=${() => {
                                     this.navigateTo('dashboard');
-                                    this.pendingConflicts = null;
-                                }}
-                                @workflow-loaded=${() => {
-                                    // Pass conflicts to workflow after it's loaded
-                                    if (this.pendingConflicts) {
-                                        const workflow = this.shadowRoot?.querySelector('workflow-screen');
-                                        if (workflow && 'setConflicts' in workflow) {
-                                            (workflow as any).setConflicts(this.pendingConflicts.conflicts);
-                                        }
-                                        this.pendingConflicts = null;
-                                    }
                                 }}
                         ></workflow-screen>
                     ` : ''}
@@ -307,6 +372,20 @@ export class AppShell extends LitElement {
                         ></settings-screen>
                     ` : ''}
                 </main>
+
+                ${this.showProjectExistsDialog && this.projectExistsResult ? html`
+                    <project-exists-dialog
+                            .existsResult=${this.projectExistsResult}
+                            @import-option=${this.handleImportOption}
+                    ></project-exists-dialog>
+                ` : ''}
+
+                ${this.showMergeResultDialog && this.mergeResult ? html`
+                    <merge-result-dialog
+                            .mergeResult=${this.mergeResult}
+                            @merge-result-closed=${this.handleMergeResultClosed}
+                    ></merge-result-dialog>
+                ` : ''}
         `;
     }
 }

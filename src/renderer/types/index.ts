@@ -23,11 +23,28 @@ export interface FileConflict {
   importedContent: string;
 }
 
+export interface ProjectExistsResult {
+  projectExists: boolean;
+  projectId: number;
+  projectName: string;
+  zipPath: string;
+}
+
 export interface ImportConflictResult {
   hasConflicts: boolean;
   projectId: number;
   conflicts: FileConflict[];
+  mergeFailed?: boolean;
+  zipPath?: string;
 }
+
+export interface MergeResult {
+  mergedWithConflicts?: boolean;
+  projectId: number;
+  conflicts?: FileConflict[];
+}
+
+export type ImportOption = 'cancel' | 'overwrite' | 'merge';
 
 export interface Settings {
   theme: 'dark' | 'light' | 'system';
@@ -53,8 +70,9 @@ declare global {
       deleteProject: (id: number) => Promise<IpcResult>;
       exportProject: (id: number) => Promise<IpcResult<string | null>>;
       importProject: () => Promise<IpcResult<Project | ImportConflictResult>>;
-      resolveConflict: (filePath: string, acceptedContent: string) => Promise<IpcResult>;
-      getConflicts: (projectId: number) => Promise<IpcResult<FileConflict[]>>;
+      resolveConflict: (filePath: string, acceptedContent: string, projectId: number) => Promise<IpcResult>;
+      getConflictedFiles: (projectId: number) => Promise<IpcResult<string[]>>;
+      importWithOption: (projectId: number, zipPath: string, option: ImportOption) => Promise<IpcResult<Project | ImportConflictResult>>;
       addFiles: (projectId: number) => Promise<IpcResult<FileItem[]>>;
       createFile: (projectId: number) => Promise<IpcResult<FileItem>>;
       readFile: (filePath: string) => Promise<IpcResult<string>>;

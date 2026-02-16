@@ -54,11 +54,26 @@ export function setupProjectHandlers(): void {
       return { success: true, canceled: true };
     }
 
-    return Projects.importProject(result.filePaths[0]);
+    const importResult: any = await Projects.importProject(result.filePaths[0]);
+    
+    // If there are conflicts, include the zip path so we can retry with different options
+    if (importResult.success && importResult.data && typeof importResult.data === 'object' && 'hasConflicts' in importResult.data) {
+      importResult.data.zipPath = result.filePaths[0];
+    }
+    
+    return importResult;
   });
 
-  ipcMain.handle('project:resolveConflict', async (_event, filePath: string, acceptedContent: string) => {
-    return Projects.resolveConflict(filePath, acceptedContent);
+  ipcMain.handle('project:resolveConflict', async (_event, filePath: string, acceptedContent: string, projectId: number) => {
+    return Projects.resolveConflict(filePath, acceptedContent, projectId);
+  });
+
+  ipcMain.handle('project:getConflictedFiles', async (_event, projectId: number) => {
+    return { success: true, data: Projects.getConflictedFiles(projectId) };
+  });
+
+  ipcMain.handle('project:importWithOption', async (_event, projectId: number, zipPath: string, option: 'overwrite' | 'merge' | 'cancel') => {
+    return Projects.importWithOption(projectId, zipPath, option);
   });
 
   log.info('Project handlers registered');
