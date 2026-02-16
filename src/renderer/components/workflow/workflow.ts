@@ -1,6 +1,6 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, state, property} from 'lit/decorators.js';
-import {msg} from '@lit/localize';
+import {msg, str} from '@lit/localize';
 import {Project, FileItem, FileConflict, ImportConflictResult} from '../../types';
 import { baseStyles } from "../../styles/base";
 import { fontStyles } from "../../styles/fonts";
@@ -470,7 +470,7 @@ export class WorkflowScreen extends LitElement {
                         ${this.project?.type}</h1>
                     ${this.hasConflicts ? html`
                         <span class="conflict-badge" style="background-color: #ff9800; color: white; padding: 4px 12px; border-radius: 4px; font-size: 14px;">
-                            ${this.conflicts.size} File(s) with Conflicts
+                            ${msg(str`${this.conflicts.size} file(s) with conflicts`)}
                         </span>
                     ` : ''}
                 </div>

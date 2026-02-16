@@ -9,7 +9,8 @@
     /* eslint-disable @typescript-eslint/no-explicit-any */
 
     export const templates = {
-      's091d3d07b5b3076f': `Aceptar`,
+      's00e287cd986f4a96': str`${0} archivo(s) con conflictos`,
+'s091d3d07b5b3076f': `Aceptar`,
 's0e0a962e81f739c7': `Fusionar`,
 's146992649590c5f0': `Ya existe un proyecto con este identificador`,
 's199f5853f4e718f7': `Proyectos`,

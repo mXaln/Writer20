@@ -9,7 +9,8 @@
     /* eslint-disable @typescript-eslint/no-explicit-any */
 
     export const templates = {
-      's091d3d07b5b3076f': `ОК`,
+      's00e287cd986f4a96': str`${0} файл(ов) с конфликтами`,
+'s091d3d07b5b3076f': `ОК`,
 's0e0a962e81f739c7': `Объединить`,
 's146992649590c5f0': `Проект с таким идентификатором уже существует`,
 's199f5853f4e718f7': `Проекты`,

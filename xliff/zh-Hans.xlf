@@ -210,6 +210,10 @@
   <source>An unknown error occurred</source>
   <target>发生未知错误</target>
 </trans-unit>
+<trans-unit id="s00e287cd986f4a96">
+  <source><x id="0" equiv-text="${filesCount}"/> file(s) with conflicts</source>
+  <target><x id="0" equiv-text="${filesCount}"/> 个文件存在冲突</target>
+</trans-unit>
 </body>
 </file>
 </xliff>

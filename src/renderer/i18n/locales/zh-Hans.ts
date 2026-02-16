@@ -9,7 +9,8 @@
     /* eslint-disable @typescript-eslint/no-explicit-any */
 
     export const templates = {
-      's091d3d07b5b3076f': `确定`,
+      's00e287cd986f4a96': str`${0} 个文件存在冲突`,
+'s091d3d07b5b3076f': `确定`,
 's0e0a962e81f739c7': `合并`,
 's146992649590c5f0': `具有此标识符的项目已存在`,
 's199f5853f4e718f7': `项目`,
