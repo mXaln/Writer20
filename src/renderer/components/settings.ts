@@ -230,9 +230,9 @@ export class SettingsScreen extends LitElement {
                     <div class="setting-item">
                         <span class="setting-label">${msg('Language')}</span>
                         <div class="select-wrapper">
-                            <select .value=${this.language} @change=${this.handleLanguageChange}>
+                            <select @change=${this.handleLanguageChange}>
                                 ${allLocales.map(locale => html`
-                                    <option value=${locale}>${this.getLocaleNames(locale) || locale}</option>
+                                    <option value=${locale} ?selected=${this.language === locale}>${this.getLocaleNames(locale) || locale}</option>
                                 `)}
                             </select>
                             <span class="select-arrow">

@@ -77,7 +77,8 @@
       "target": [
         "deb"
       ],
-      "icon": "resources/icon.png"
+      "icon": "resources/icon.png",
+      "category": "Translation"
     },
     "nsis": {
       "oneClick": false,

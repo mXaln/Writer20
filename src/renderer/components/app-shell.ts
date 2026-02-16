@@ -44,7 +44,7 @@ export class AppShell extends LitElement {
                 width: 80px;
                 background-color: var(--primary);
                 border-right: 1px solid var(--border);
-                padding: 16px 0;
+                padding: 0;
             }
 
             .nav-items {

@@ -80,14 +80,14 @@ export class ProjectCard extends LitElement {
     }
 
     render() {
-        return html`
+        return this.project ? html`
             <div class="card" @click=${this.handleClick}>
                 <div class="name">${this.project.language} - ${this.project.book} - ${this.project.type}</div>
                 <button class="info-btn" @click=${this.handleInfoClick}>
                     <span class="material-icons">info</span>
                 </button>
             </div>
-        `;
+        ` : null;
     }
 }
 
