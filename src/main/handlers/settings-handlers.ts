@@ -3,7 +3,7 @@ import log from 'electron-log';
 import * as Settings from '../business/settings';
 
 export function setupSettingsHandlers(): void {
-  ipcMain.handle('settings:get', async () => {
+  ipcMain.handle('settings:list', async () => {
     return Settings.list();
   });
 

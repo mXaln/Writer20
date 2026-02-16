@@ -1,9 +1,11 @@
 import * as db from '../database';
 import log from "electron-log";
 import path from "path";
-import {app, dialog} from "electron";
+import {app} from "electron";
 import fs from "fs";
 import simpleGit from "simple-git";
+import archiver from "archiver";
+import extract from "extract-zip";
 
 export async function create(language: string, book: string, type: string) {
     try {
@@ -114,38 +116,21 @@ export function remove(id: number) {
     }
 }
 
-export async function doExport(id: number) {
+export async function exportProject(project: any, destinationPath: string) {
     try {
-        const project = db.getProject(id);
-        if (!project) {
-            return { success: false, error: 'Project not found' };
-        }
-
         const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
         if (!fs.existsSync(projectFolder)) {
             return { success: false, error: 'Project folder not found' };
         }
 
-        // Show save dialog
-        const result = await dialog.showSaveDialog({
-            title: 'Export Project as ZIP',
-            defaultPath: `${project.name}.zip`,
-            filters: [{ name: 'ZIP Files', extensions: ['zip'] }]
-        });
-
-        if (result.canceled || !result.filePath) {
-            return { success: true, data: null };
-        }
-
         // Create zip file
-        const archiver = require('archiver');
-        const output = fs.createWriteStream(result.filePath);
+        const output = fs.createWriteStream(destinationPath);
         const archive = archiver('zip', { zlib: { level: 9 } });
 
         return new Promise((resolve) => {
             output.on('close', () => {
-                log.info(`Exported project ${project.name} to ${result.filePath}`);
-                resolve({ success: true, data: result.filePath });
+                log.info(`Exported project ${project.name} to ${destinationPath}`);
+                resolve({ success: true, data: destinationPath });
             });
 
             archive.on('error', (err: any) => {
@@ -163,27 +148,17 @@ export async function doExport(id: number) {
     }
 }
 
-export async function doImport() {
+export async function importProject(zipPath: string) {
     try {
-        // Show open dialog to select ZIP file
-        const result = await dialog.showOpenDialog({
-            title: 'Import Project from ZIP',
-            filters: [{ name: 'ZIP Files', extensions: ['zip'] }],
-            properties: ['openFile']
-        });
-
-        if (result.canceled || result.filePaths.length === 0) {
-            return { success: true, data: null };
+        if (!fs.existsSync(zipPath)) {
+            return { success: false, error: 'Import file not found' };
         }
-
-        const zipPath = result.filePaths[0];
 
         // Create temp folder for extraction
         const tempFolder = path.join(app.getPath('temp'), `writer20-import-${Date.now()}`);
         fs.mkdirSync(tempFolder, { recursive: true });
 
         // Extract ZIP file
-        const extract = require('extract-zip');
         await extract(zipPath, { dir: tempFolder });
 
         // Look for manifest.json in extracted content
