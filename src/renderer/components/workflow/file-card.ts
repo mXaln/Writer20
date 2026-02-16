@@ -253,10 +253,9 @@ export class FileCard extends LitElement {
             <div class="conflict-container">
                 <div class="conflict-version">
                     <div class="conflict-version-header current">
-                        <span>Current Version</span>
                         <button class="accept-btn" @click=${this.handleAcceptCurrent}>
                             <span class="material-icons" style="font-size: 14px;">check</span>
-                            Accept
+                            ${msg(`Accept Current`)}
                         </button>
                     </div>
                     <div class="conflict-version-content">
@@ -265,10 +264,9 @@ export class FileCard extends LitElement {
                 </div>
                 <div class="conflict-version">
                     <div class="conflict-version-header imported">
-                        <span>Imported Version</span>
                         <button class="accept-btn" @click=${this.handleAcceptImported}>
                             <span class="material-icons" style="font-size: 14px;">check</span>
-                            Accept
+                            ${msg(`Accept Imported`)}
                         </button>
                     </div>
                     <div class="conflict-version-content">
@@ -286,7 +284,7 @@ export class FileCard extends LitElement {
                     <span class="file-name">
                         ${this.file.name}
                         ${this.hasConflicts && this.conflict ? html`
-                            <span class="conflict-badge">Conflict</span>
+                            <span class="conflict-badge">${msg(`Conflict`)}</span>
                         ` : ''}
                     </span>
                     <div class="file-actions">

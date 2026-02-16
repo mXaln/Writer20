@@ -214,6 +214,18 @@
   <source><x id="0" equiv-text="${filesCount}"/> file(s) with conflicts</source>
   <target><x id="0" equiv-text="${filesCount}"/> archivo(s) con conflictos</target>
 </trans-unit>
+<trans-unit id="s614f5ea11589c634">
+  <source>Accept Current</source>
+  <target>Aceptar actual</target>
+</trans-unit>
+<trans-unit id="s4ca7db65759b2e63">
+  <source>Accept Imported</source>
+  <target>Aceptar importado</target>
+</trans-unit>
+<trans-unit id="s4e4bf859a9914e0f">
+  <source>Conflict</source>
+  <target>Conflicto</target>
+</trans-unit>
 </body>
 </file>
 </xliff>
