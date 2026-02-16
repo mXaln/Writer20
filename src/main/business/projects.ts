@@ -2,6 +2,7 @@ import * as db from '../database';
 import log from "electron-log";
 import path from "path";
 import {app} from "electron";
+import {getAppDataDir} from './app';
 import fs from "fs";
 import simpleGit from "simple-git";
 import archiver from "archiver";
@@ -21,10 +22,10 @@ export async function create(language: string, book: string, type: string) {
         log.info(`Creating project: ${project.name}`);
 
         // Create project folder in ~/Writer20 using project.name
-        const appPath = path.join(app.getPath('home'), 'Writer20', project.name);
-        if (!fs.existsSync(appPath)) {
-            fs.mkdirSync(appPath, { recursive: true });
-            log.info(`Created project folder: ${appPath}`);
+        const projectPath = path.join(getAppDataDir(), project.name);
+        if (!fs.existsSync(projectPath)) {
+            fs.mkdirSync(projectPath, { recursive: true });
+            log.info(`Created project folder: ${projectPath}`);
         }
 
         // Create manifest.json file
@@ -50,17 +51,17 @@ export async function create(language: string, book: string, type: string) {
                 name: type
             }
         };
-        const manifestPath = path.join(appPath, 'manifest.json');
+        const manifestPath = path.join(projectPath, 'manifest.json');
         fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
         log.info(`Created manifest.json: ${manifestPath}`);
 
         // Initialize git repository
         try {
-            const git = simpleGit(appPath);
+            const git = simpleGit(projectPath);
             await git.init();
             await git.add('.');
             await git.commit('Initial commit');
-            log.info(`Initialized git repository: ${appPath}`);
+            log.info(`Initialized git repository: ${projectPath}`);
         } catch (gitError: any) {
             log.error(`Git init error: ${gitError.message}`);
         }
@@ -103,10 +104,10 @@ export function remove(id: number) {
         }
 
         // Delete project folder
-        const appPath = path.join(app.getPath('home'), 'Writer20', project.name);
-        if (fs.existsSync(appPath)) {
-            fs.rmSync(appPath, { recursive: true, force: true });
-            log.info(`Deleted project folder: ${appPath}`);
+        const projectPath = path.join(getAppDataDir(), project.name);
+        if (fs.existsSync(projectPath)) {
+            fs.rmSync(projectPath, { recursive: true, force: true });
+            log.info(`Deleted project folder: ${projectPath}`);
         }
 
         db.deleteProject(id);
@@ -119,8 +120,8 @@ export function remove(id: number) {
 
 export async function exportProject(project: any, destinationPath: string) {
     try {
-        const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
-        if (!fs.existsSync(projectFolder)) {
+        const projectPath = path.join(getAppDataDir(), project.name);
+        if (!fs.existsSync(projectPath)) {
             return { success: false, error: ErrorCode.PROJECT_FOLDER_NOT_FOUND };
         }
 
@@ -140,7 +141,7 @@ export async function exportProject(project: any, destinationPath: string) {
             });
 
             archive.pipe(output);
-            archive.directory(projectFolder, false);
+            archive.directory(projectPath, false);
             archive.finalize();
         });
     } catch (error: any) {
@@ -210,7 +211,7 @@ export async function importProject(zipPath: string) {
     }
 }
 
-function detectGitConflicts(projectFolder: string, conflictFiles: string[]): Array<{
+function detectGitConflicts(projectPath: string, conflictFiles: string[]): Array<{
     fileId: string;
     fileName: string;
     filePath: string;
@@ -225,7 +226,7 @@ function detectGitConflicts(projectFolder: string, conflictFiles: string[]): Arr
         importedContent: string;
     }> = [];
     
-    const contentsFolder = path.join(projectFolder, 'contents');
+    const contentsFolder = path.join(projectPath, 'contents');
     
     for (const file of conflictFiles) {
         const filePath = path.join(contentsFolder, file);
@@ -292,12 +293,12 @@ async function importProjectWithFileMerge(projectId: number, zipPath: string): P
         return { success: false, error: ErrorCode.PROJECT_NOT_FOUND };
     }
     
-    const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
-    const contentsFolder = path.join(projectFolder, 'contents');
+    const projectPath = path.join(getAppDataDir(), project.name);
+    const contentsPath = path.join(projectPath, 'contents');
     
     // Get existing files
-    const existingFiles = fs.existsSync(contentsFolder)
-        ? fs.readdirSync(contentsFolder).filter(f => f.endsWith('.txt'))
+    const existingFiles = fs.existsSync(contentsPath)
+        ? fs.readdirSync(contentsPath).filter(f => f.endsWith('.txt'))
         : [];
     
     // Get imported files
@@ -324,7 +325,7 @@ async function importProjectWithFileMerge(projectId: number, zipPath: string): P
             ? path.join(tempContentsFolder, fileName)
             : path.join(tempFolder, fileName);
         
-        const existingPath = path.join(contentsFolder, fileName);
+        const existingPath = path.join(contentsPath, fileName);
         
         if (existingFiles.includes(fileName)) {
             const existingContent = fs.existsSync(existingPath)
@@ -379,7 +380,7 @@ export async function importWithOption(projectId: number, zipPath: string, optio
             return { success: false, error: ErrorCode.PROJECT_NOT_FOUND };
         }
         
-        const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
+        const projectPath = path.join(getAppDataDir(), project.name);
         
         // Create temp folder for extraction
         const tempFolder = path.join(app.getPath('temp'), `writer20-import-${Date.now()}`);
@@ -389,7 +390,7 @@ export async function importWithOption(projectId: number, zipPath: string, optio
             // Extract ZIP
             await extract(zipPath, { dir: tempFolder });
             
-            const git = simpleGit(projectFolder);
+            const git = simpleGit(projectPath);
             
             // Check if project has git repo
             let isRepo = await git.checkIsRepo();
@@ -427,7 +428,7 @@ export async function importWithOption(projectId: number, zipPath: string, optio
                 await git.fetch(remoteName);
                 
                 // Save local manifest.json content before merge
-                const localManifestPath = path.join(projectFolder, 'manifest.json');
+                const localManifestPath = path.join(projectPath, 'manifest.json');
                 const localManifestContent = fs.existsSync(localManifestPath) 
                     ? fs.readFileSync(localManifestPath, 'utf-8') 
                     : null;
@@ -443,7 +444,7 @@ export async function importWithOption(projectId: number, zipPath: string, optio
                 }
                 
                 // Always use local manifest.json (ours) - exclude from merge
-                const manifestPath = path.join(projectFolder, 'manifest.json');
+                const manifestPath = path.join(projectPath, 'manifest.json');
                 if (localManifestContent) {
                     fs.writeFileSync(manifestPath, localManifestContent, 'utf-8');
                     await git.add('manifest.json');
@@ -478,7 +479,7 @@ export async function importWithOption(projectId: number, zipPath: string, optio
                 if (conflictedFiles.length > 0) {
                     // There are merge conflicts! (detected via git conflict markers in files)
                     const conflictFilePaths = conflictedFiles.map((f: string) => path.basename(f));
-                    const conflicts = detectGitConflicts(projectFolder, conflictFilePaths);
+                    const conflicts = detectGitConflicts(projectPath, conflictFilePaths);
                     
                     fs.rmSync(tempFolder, { recursive: true, force: true });
                     
@@ -512,7 +513,7 @@ export async function importWithOption(projectId: number, zipPath: string, optio
             
             // Abort any failed merge and clean up
             try {
-                const git = simpleGit(projectFolder);
+                const git = simpleGit(projectPath);
                 await git.merge(['--abort']);
                 await git.removeRemote('imported');
             } catch (e) {
@@ -529,13 +530,13 @@ export async function importWithOption(projectId: number, zipPath: string, optio
 }
 
 // Helper function to extract zip and copy files to contents folder
-async function extractAndCopyFiles(zipPath: string, projectFolder: string): Promise<string> {
+async function extractAndCopyFiles(zipPath: string, projectPath: string): Promise<string> {
     const tempFolder = path.join(app.getPath('temp'), `writer20-import-${Date.now()}`);
     fs.mkdirSync(tempFolder, { recursive: true });
 
     await extract(zipPath, { dir: tempFolder });
 
-    const contentsFolder = path.join(projectFolder, 'contents');
+    const contentsFolder = path.join(projectPath, 'contents');
     if (!fs.existsSync(contentsFolder)) {
         fs.mkdirSync(contentsFolder, { recursive: true });
     }
@@ -566,7 +567,7 @@ async function extractAndCopyFiles(zipPath: string, projectFolder: string): Prom
 }
 
 // Helper function to create manifest.json
-function createManifest(projectFolder: string, language: string, book: string, resource: string): void {
+function createManifest(projectPath: string, language: string, book: string, resource: string): void {
     const manifest = {
         package_version: 1,
         format: "usfm",
@@ -589,7 +590,7 @@ function createManifest(projectFolder: string, language: string, book: string, r
             name: resource
         }
     };
-    const manifestPath = path.join(projectFolder, 'manifest.json');
+    const manifestPath = path.join(projectPath, 'manifest.json');
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 }
 
@@ -599,27 +600,27 @@ async function importProjectNew(language: string, book: string, resource: string
     const project = db.createProject(language, book, resource);
 
     // Create project folder
-    const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
-    if (!fs.existsSync(projectFolder)) {
-        fs.mkdirSync(projectFolder, { recursive: true });
+    const projectPath = path.join(getAppDataDir(), project.name);
+    if (!fs.existsSync(projectPath)) {
+        fs.mkdirSync(projectPath, { recursive: true });
     }
 
     // Extract zip and copy files
-    const tempFolder = await extractAndCopyFiles(zipPath, projectFolder);
+    const tempFolder = await extractAndCopyFiles(zipPath, projectPath);
 
     // Cleanup temp folder
     fs.rmSync(tempFolder, { recursive: true, force: true });
 
     // Create manifest.json
-    createManifest(projectFolder, language, book, resource);
+    createManifest(projectPath, language, book, resource);
 
     // Initialize git repository
     try {
-        const git = simpleGit(projectFolder);
+        const git = simpleGit(projectPath);
         await git.init();
         await git.add('.');
         await git.commit('Initial commit');
-        log.info(`Initialized git repository: ${projectFolder}`);
+        log.info(`Initialized git repository: ${projectPath}`);
     } catch (gitError: any) {
         log.error(`Git init error: ${gitError.message}`);
     }
@@ -636,10 +637,10 @@ async function importProjectMerge(projectId: number, zipPath: string): Promise<{
         return { success: false, error: ErrorCode.PROJECT_NOT_FOUND };
     }
 
-    const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
+    const projectPath = path.join(getAppDataDir(), project.name);
 
     // Extract zip and copy files
-    const tempFolder = await extractAndCopyFiles(zipPath, projectFolder);
+    const tempFolder = await extractAndCopyFiles(zipPath, projectPath);
 
     // Cleanup temp folder
     fs.rmSync(tempFolder, { recursive: true, force: true });

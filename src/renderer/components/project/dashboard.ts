@@ -1,5 +1,5 @@
 import {LitElement, html, css} from 'lit';
-import {customElement, state, property} from 'lit/decorators.js';
+import {customElement, state} from 'lit/decorators.js';
 import {msg, str} from '@lit/localize';
 import {Project} from '../../types';
 import {baseStyles} from "../../styles/base";

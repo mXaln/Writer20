@@ -1,7 +1,7 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {msg} from '@lit/localize';
-import {ProjectExistsResult, ImportOption} from '../types';
+import {ProjectExistsResult} from '../types';
 import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
 

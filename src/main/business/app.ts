@@ -1,4 +1,9 @@
 import {app} from "electron";
+import path from "path";
+
+export function getAppDataDir(): string {
+    return path.join(app.getPath('home'), 'Writer20');
+}
 
 export function getPath(name: string) {
     try {

@@ -5,7 +5,7 @@ import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
 import {localized, msg} from '@lit/localize';
 const {setLocale} = await import('../i18n/localization');
-import {Theme, Language, ImportConflictResult, ImportOption, ProjectExistsResult, MergeResult} from '../types';
+import {Theme, Language, ImportOption, ProjectExistsResult, MergeResult} from '../types';
 import './project-exists-dialog';
 import './merge-result-dialog';
 

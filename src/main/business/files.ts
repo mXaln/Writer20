@@ -1,27 +1,28 @@
 import * as db from "../database";
 import path from "path";
 import {app, shell} from "electron";
+import {getAppDataDir} from './app';
 import fs from "fs";
 import log from "electron-log";
 import simpleGit from "simple-git";
 import { ErrorCode } from '../error-codes';
 
 // Helper to get project and ensure contents folder exists
-function getProjectContentsFolder(projectId: number): { projectFolder: string; contentsFolder: string } | { error: string } {
+function getProjectContentsFolder(projectId: number): { projectPath: string; contentsPath: string } | { error: string } {
     const project = db.getProject(projectId);
     if (!project) {
         return { error: ErrorCode.PROJECT_NOT_FOUND };
     }
 
-    const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
-    const contentsFolder = path.join(projectFolder, 'contents');
+    const projectPath = path.join(getAppDataDir(), project.name);
+    const contentsPath = path.join(projectPath, 'contents');
 
     // Ensure contents folder exists
-    if (!fs.existsSync(contentsFolder)) {
-        fs.mkdirSync(contentsFolder, { recursive: true });
+    if (!fs.existsSync(contentsPath)) {
+        fs.mkdirSync(contentsPath, { recursive: true });
     }
 
-    return { projectFolder, contentsFolder };
+    return { projectPath: projectPath, contentsPath: contentsPath };
 }
 
 export function create(projectId: number) {
@@ -31,11 +32,11 @@ export function create(projectId: number) {
             return { success: false, error: projectResult.error };
         }
 
-        const { contentsFolder } = projectResult;
+        const { contentsPath } = projectResult;
 
         // Get existing files from contents folder
-        const existingFiles = fs.readdirSync(contentsFolder)
-            .filter(f => fs.statSync(path.join(contentsFolder, f)).isFile());
+        const existingFiles = fs.readdirSync(contentsPath)
+            .filter(f => fs.statSync(path.join(contentsPath, f)).isFile());
 
         let nextNum = 1;
 
@@ -55,7 +56,7 @@ export function create(projectId: number) {
 
         // Generate filename with zero-padded number
         const fileName = `${String(nextNum).padStart(2, '0')}.txt`;
-        const filePath = path.join(contentsFolder, fileName);
+        const filePath = path.join(contentsPath, fileName);
 
         // Create empty file
         fs.writeFileSync(filePath, '', 'utf-8');
@@ -86,7 +87,7 @@ export function read(filePath: string) {
 export async function write(filePath: string, content: string) {
     try {
         // Extract project folder from file path
-        const projectFolder = path.dirname(path.dirname(filePath));
+        const projectPath = path.dirname(path.dirname(filePath));
         const fileName = path.basename(filePath);
         const relativePath = path.join('contents', fileName);
 
@@ -99,7 +100,7 @@ export async function write(filePath: string, content: string) {
         // Commit changes to git if content is not empty or file didn't exist
         if (content.trim() || !fileExistedBefore) {
             try {
-                const git = simpleGit(projectFolder);
+                const git = simpleGit(projectPath);
                 await git.add(relativePath);
                 await git.commit(`Update ${fileName}`);
                 log.info(`Committed: ${fileName}`);
@@ -121,19 +122,19 @@ export function list(projectId: number) {
             return { success: false, error: ErrorCode.PROJECT_NOT_FOUND };
         }
 
-        const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
-        const contentsFolder = path.join(projectFolder, 'contents');
+        const projectPath = path.join(getAppDataDir(), project.name);
+        const contentsPath = path.join(projectPath, 'contents');
 
-        if (!fs.existsSync(contentsFolder)) {
+        if (!fs.existsSync(contentsPath)) {
             return { success: true, data: [] };
         }
 
-        const files = fs.readdirSync(contentsFolder)
-            .filter(f => fs.statSync(path.join(contentsFolder, f)).isFile())
+        const files = fs.readdirSync(contentsPath)
+            .filter(f => fs.statSync(path.join(contentsPath, f)).isFile())
             .map(f => ({
                 id: f,
                 name: f,
-                path: path.join(contentsFolder, f)
+                path: path.join(contentsPath, f)
             }))
             .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -151,13 +152,13 @@ export function listWithContent(projectId: number) {
             return { success: false, error: projectResult.error };
         }
 
-        const { contentsFolder } = projectResult;
+        const { contentsPath } = projectResult;
 
         // Generate 100 items
         const items: Array<{id: string; name: string; path: string; content: string}> = [];
         for (let i = 1; i <= 100; i++) {
             const fileName = `${String(i).padStart(2, '0')}.txt`;
-            const filePath = path.join(contentsFolder, fileName);
+            const filePath = path.join(contentsPath, fileName);
 
             // Read content if file exists
             let content = '';
@@ -223,20 +224,20 @@ export function getConflictedFiles(projectId: number): string[] {
     }
     
     // Scan contents folder for files with git conflict markers
-    const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
-    const contentsFolder = path.join(projectFolder, 'contents');
+    const projectPath = path.join(getAppDataDir(), project.name);
+    const contentsPath = path.join(projectPath, 'contents');
     
-    if (!fs.existsSync(contentsFolder)) {
+    if (!fs.existsSync(contentsPath)) {
         return [];
     }
     
-    const files = fs.readdirSync(contentsFolder);
+    const files = fs.readdirSync(contentsPath);
     const conflictedFiles: string[] = [];
     
     for (const file of files) {
         if (!file.endsWith('.txt')) continue;
         
-        const filePath = path.join(contentsFolder, file);
+        const filePath = path.join(contentsPath, file);
         const content = fs.readFileSync(filePath, 'utf-8');
         
         // Check for conflict markers
@@ -262,15 +263,15 @@ export async function resolveConflict(filePath: string, acceptedContent: string,
         // Git add the resolved file and check if all conflicts are resolved
         const project = db.getProject(projectId);
         if (project) {
-            const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
-            const git = simpleGit(projectFolder);
+            const projectPath = path.join(getAppDataDir(), project.name);
+            const git = simpleGit(projectPath);
             
             // Get the path relative to project root (handle files in contents/ subfolder)
             const fileName = path.basename(filePath);
-            const contentsFolder = path.join(projectFolder, 'contents');
+            const contentsPath = path.join(projectPath, 'contents');
             let gitPath: string;
             
-            if (filePath.includes(contentsFolder) || filePath.includes('contents\\')) {
+            if (filePath.includes(contentsPath) || filePath.includes('contents\\')) {
                 // File is in contents folder - use contents/filename
                 gitPath = path.join('contents', fileName);
             } else {

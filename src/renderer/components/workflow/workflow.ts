@@ -1,7 +1,7 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, state, property} from 'lit/decorators.js';
 import {msg, str} from '@lit/localize';
-import {Project, FileItem, FileConflict, ImportConflictResult} from '../../types';
+import {Project, FileItem, FileConflict} from '../../types';
 import { baseStyles } from "../../styles/base";
 import { fontStyles } from "../../styles/fonts";
 import {getLocalizedError} from '../../i18n/error-messages';
