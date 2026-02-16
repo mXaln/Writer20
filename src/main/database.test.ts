@@ -14,7 +14,7 @@ import {
   setSetting,
   getAllSettings,
   getProjectByLanguageBookType
-} from '../../src/main/database';
+} from './database';
 
 // --- MOCKS ---
 vi.mock('electron');
