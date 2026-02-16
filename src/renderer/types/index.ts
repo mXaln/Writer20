@@ -15,6 +15,20 @@ export interface FileItem {
   content?: string;
 }
 
+export interface FileConflict {
+  fileId: string;
+  fileName: string;
+  filePath: string;
+  currentContent: string;
+  importedContent: string;
+}
+
+export interface ImportConflictResult {
+  hasConflicts: boolean;
+  projectId: number;
+  conflicts: FileConflict[];
+}
+
 export interface Settings {
   theme: 'dark' | 'light' | 'system';
   language: 'en' | 'ru';
@@ -38,7 +52,9 @@ declare global {
       getProject: (id: number) => Promise<IpcResult<Project>>;
       deleteProject: (id: number) => Promise<IpcResult>;
       exportProject: (id: number) => Promise<IpcResult<string | null>>;
-      importProject: () => Promise<IpcResult<Project | null>>;
+      importProject: () => Promise<IpcResult<Project | ImportConflictResult>>;
+      resolveConflict: (filePath: string, acceptedContent: string) => Promise<IpcResult>;
+      getConflicts: (projectId: number) => Promise<IpcResult<FileConflict[]>>;
       addFiles: (projectId: number) => Promise<IpcResult<FileItem[]>>;
       createFile: (projectId: number) => Promise<IpcResult<FileItem>>;
       readFile: (filePath: string) => Promise<IpcResult<string>>;

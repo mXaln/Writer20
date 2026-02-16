@@ -57,5 +57,9 @@ export function setupProjectHandlers(): void {
     return Projects.importProject(result.filePaths[0]);
   });
 
+  ipcMain.handle('project:resolveConflict', async (_event, filePath: string, acceptedContent: string) => {
+    return Projects.resolveConflict(filePath, acceptedContent);
+  });
+
   log.info('Project handlers registered');
 }

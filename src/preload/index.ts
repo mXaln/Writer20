@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('project:export', id),
   importProject: () =>
     ipcRenderer.invoke('project:import'),
+  resolveConflict: (filePath: string, acceptedContent: string) =>
+    ipcRenderer.invoke('project:resolveConflict', filePath, acceptedContent),
 
   // File operations
   addFiles: (projectId: number) =>

@@ -1,7 +1,7 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, state, property} from 'lit/decorators.js';
 import {msg} from '@lit/localize';
-import {Project, FileItem} from '../../types';
+import {Project, FileItem, FileConflict, ImportConflictResult} from '../../types';
 import { baseStyles } from "../../styles/base";
 import { fontStyles } from "../../styles/fonts";
 import './file-card';
@@ -221,11 +221,16 @@ export class WorkflowScreen extends LitElement {
     @state() private error = '';
     @state() private editingFileId: string | null = null;
     @state() private fileContents: Map<string, string> = new Map();
+    @state() private conflicts: Map<string, FileConflict> = new Map();
+    @state() private hasConflicts = false;
 
     async connectedCallback() {
         super.connectedCallback();
         await this.loadProject();
         await this.loadFiles();
+        
+        // Notify parent that workflow is loaded (to pass any pending conflicts)
+        this.dispatchEvent(new CustomEvent('workflow-loaded', {bubbles: true, composed: true}));
     }
 
     private async loadProject() {
@@ -256,6 +261,45 @@ export class WorkflowScreen extends LitElement {
             console.error('Failed to load files:', error);
         } finally {
             this.loading = false;
+        }
+    }
+
+    // Public method to set conflicts from parent component
+    public setConflicts(conflicts: FileConflict[]) {
+        this.conflicts = new Map();
+        for (const conflict of conflicts) {
+            this.conflicts.set(conflict.fileId, conflict);
+        }
+        this.hasConflicts = conflicts.length > 0;
+        
+        // Also update fileContents with current content for conflicted files
+        for (const conflict of conflicts) {
+            this.fileContents = new Map(this.fileContents).set(conflict.fileId, conflict.currentContent);
+        }
+    }
+
+    private async handleResolveConflict(e: CustomEvent<{file: FileItem; acceptedContent: string}>) {
+        const {file, acceptedContent} = e.detail;
+        
+        try {
+            const result = await window.electronAPI.resolveConflict(file.path, acceptedContent);
+            if (result.success) {
+                // Remove from conflicts
+                this.conflicts = new Map(this.conflicts);
+                this.conflicts.delete(file.id);
+                this.hasConflicts = this.conflicts.size > 0;
+                
+                // Update content to the accepted version
+                this.fileContents = new Map(this.fileContents).set(file.id, acceptedContent);
+                
+                // Reload files to reflect changes
+                await this.loadFiles();
+            } else {
+                this.showError(result.error || msg('Failed to resolve conflict'));
+            }
+        } catch (error) {
+            console.error('Failed to resolve conflict:', error);
+            this.showError(msg('Failed to resolve conflict'));
         }
     }
 
@@ -338,6 +382,11 @@ export class WorkflowScreen extends LitElement {
                     </button>
                     <h1 class="project-title">${this.project?.language} - ${this.project?.book} -
                         ${this.project?.type}</h1>
+                    ${this.hasConflicts ? html`
+                        <span class="conflict-badge" style="background-color: #ff9800; color: white; padding: 4px 12px; border-radius: 4px; font-size: 14px;">
+                            ${this.conflicts.size} File(s) with Conflicts
+                        </span>
+                    ` : ''}
                 </div>
             </div>
 
@@ -354,8 +403,11 @@ export class WorkflowScreen extends LitElement {
                                             .file=${file}
                                             .isEditing=${this.editingFileId === file.id}
                                             .content=${this.fileContents.get(file.id) || ''}
+                                            .conflict=${this.conflicts.get(file.id) || null}
+                                            .hasConflicts=${this.conflicts.has(file.id)}
                                             @toggle-edit=${(e: CustomEvent) => this.handleToggleEdit(e)}
                                             @content-change=${(e: CustomEvent) => this.handleContentChange(e)}
+                                            @resolve-conflict=${(e: CustomEvent) => this.handleResolveConflict(e)}
                                     ></file-card>
                                 `}
                         ></lit-virtualizer>

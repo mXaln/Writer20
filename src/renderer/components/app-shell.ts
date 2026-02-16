@@ -5,7 +5,7 @@ import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
 import {localized, msg} from '@lit/localize';
 const {setLocale} = await import('../i18n/localization');
-import {Theme, Language} from '../types';
+import {Theme, Language, ImportConflictResult} from '../types';
 
 type Screen = 'dashboard' | 'workflow' | 'settings';
 
@@ -132,6 +132,7 @@ export class AppShell extends LitElement {
     @state() private language: Language = 'en';
     @state() private currentProjectId: number | null = null;
     @state() private showMenu = false;
+    @state() private pendingConflicts: ImportConflictResult | null = null;
 
     async connectedCallback() {
         super.connectedCallback();
@@ -208,7 +209,18 @@ export class AppShell extends LitElement {
         try {
             const result = await window.electronAPI.importProject();
             if (result.success && result.data) {
-                // Dispatch event to refresh dashboard
+                // Check if result is ImportConflictResult with conflicts
+                if (typeof result.data === 'object' && 'hasConflicts' in result.data) {
+                    const conflictResult = result.data as ImportConflictResult;
+                    if (conflictResult.hasConflicts && conflictResult.conflicts.length > 0) {
+                        // Store conflicts and navigate to workflow
+                        this.pendingConflicts = conflictResult;
+                        this.currentProjectId = conflictResult.projectId;
+                        this.currentScreen = 'workflow';
+                        return;
+                    }
+                }
+                // No conflicts - dispatch event to refresh dashboard
                 this.dispatchEvent(new CustomEvent('projects-updated', {bubbles: true, composed: true}));
             } else if (result.error) {
                 console.error('Import failed:', result.error);
@@ -268,7 +280,20 @@ export class AppShell extends LitElement {
                     ${this.currentScreen === 'workflow' && this.currentProjectId ? html`
                         <workflow-screen
                                 .projectId=${this.currentProjectId}
-                                @navigate-back=${() => this.navigateTo('dashboard')}
+                                @navigate-back=${() => {
+                                    this.navigateTo('dashboard');
+                                    this.pendingConflicts = null;
+                                }}
+                                @workflow-loaded=${() => {
+                                    // Pass conflicts to workflow after it's loaded
+                                    if (this.pendingConflicts) {
+                                        const workflow = this.shadowRoot?.querySelector('workflow-screen');
+                                        if (workflow && 'setConflicts' in workflow) {
+                                            (workflow as any).setConflicts(this.pendingConflicts.conflicts);
+                                        }
+                                        this.pendingConflicts = null;
+                                    }
+                                }}
                         ></workflow-screen>
                     ` : ''}
 

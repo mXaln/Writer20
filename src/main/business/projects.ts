@@ -184,45 +184,62 @@ export async function importProject(zipPath: string) {
 
         // Check if project with same language/book/resource exists
         const existing = db.getProjectByLanguageBookType(language, book, resource);
-        if (existing) {
-            // Cleanup temp folder
+        if (!existing) {
+            // No existing project - proceed with normal import
             fs.rmSync(tempFolder, { recursive: true, force: true });
-            return { success: false, error: 'Project with this identifier already exists' };
+            return await importProjectNew(language, book, resource, zipPath);
         }
 
-        // Create project in database
-        const project = db.createProject(language, book, resource);
-
-        // Create project folder
-        const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
-        if (!fs.existsSync(projectFolder)) {
-            fs.mkdirSync(projectFolder, { recursive: true });
-        }
-
-        // Create contents folder
+        // Project exists - check for conflicts
+        const projectFolder = path.join(app.getPath('home'), 'Writer20', existing.name);
         const contentsFolder = path.join(projectFolder, 'contents');
-        if (!fs.existsSync(contentsFolder)) {
-            fs.mkdirSync(contentsFolder, { recursive: true });
+        
+        // Get existing files
+        const existingFiles = fs.existsSync(contentsFolder) 
+            ? fs.readdirSync(contentsFolder).filter(f => f.endsWith('.txt'))
+            : [];
+        
+        // Get imported files
+        const tempContentsFolder = path.join(tempFolder, 'contents');
+        let importedFiles: string[] = [];
+        if (fs.existsSync(tempContentsFolder)) {
+            importedFiles = fs.readdirSync(tempContentsFolder).filter(f => f.endsWith('.txt'));
+        } else {
+            importedFiles = fs.readdirSync(tempFolder)
+                .filter(f => f.endsWith('.txt') && f !== 'manifest.json');
         }
 
-        // Move files from temp to contents folder
-        const tempContentsFolder = path.join(tempFolder, 'contents');
-        if (fs.existsSync(tempContentsFolder)) {
-            // If ZIP has contents folder, copy from there
-            const files = fs.readdirSync(tempContentsFolder);
-            for (const file of files) {
-                const srcPath = path.join(tempContentsFolder, file);
-                const destPath = path.join(contentsFolder, file);
-                fs.copyFileSync(srcPath, destPath);
-            }
-        } else {
-            // Otherwise, copy from root of temp folder (skip manifest)
-            const files = fs.readdirSync(tempFolder);
-            for (const file of files) {
-                if (file !== 'manifest.json') {
-                    const srcPath = path.join(tempFolder, file);
-                    const destPath = path.join(contentsFolder, file);
-                    fs.copyFileSync(srcPath, destPath);
+        // Find conflicts (files that exist in both and have different content)
+        const conflicts: Array<{
+            fileId: string;
+            fileName: string;
+            filePath: string;
+            currentContent: string;
+            importedContent: string;
+        }> = [];
+
+        for (const fileName of importedFiles) {
+            const importedPath = fs.existsSync(tempContentsFolder)
+                ? path.join(tempContentsFolder, fileName)
+                : path.join(tempFolder, fileName);
+            
+            const existingPath = path.join(contentsFolder, fileName);
+            
+            if (existingFiles.includes(fileName)) {
+                // File exists in both - compare content
+                const existingContent = fs.existsSync(existingPath) 
+                    ? fs.readFileSync(existingPath, 'utf-8') 
+                    : '';
+                const importedContent = fs.readFileSync(importedPath, 'utf-8');
+                
+                if (existingContent !== importedContent) {
+                    conflicts.push({
+                        fileId: fileName,
+                        fileName: fileName,
+                        filePath: existingPath,
+                        currentContent: existingContent,
+                        importedContent: importedContent
+                    });
                 }
             }
         }
@@ -230,37 +247,158 @@ export async function importProject(zipPath: string) {
         // Cleanup temp folder
         fs.rmSync(tempFolder, { recursive: true, force: true });
 
-        // Create/update manifest.json
-        const newManifestPath = path.join(projectFolder, 'manifest.json');
-        const manifest = {
-            package_version: 1,
-            format: "usfm",
-            generator: {
-                name: "writer20",
-                build: "1"
-            },
-            target_language: {
-                id: language
-            },
-            project: {
-                id: book
-            },
-            type: {
-                id: "text",
-                name: "Text"
-            },
-            resource: {
-                id: resource,
-                name: resource
-            }
-        };
-        fs.writeFileSync(newManifestPath, JSON.stringify(manifest, null, 2));
+        if (conflicts.length > 0) {
+            // Return conflict information
+            return { 
+                success: true, 
+                data: {
+                    hasConflicts: true,
+                    projectId: existing.id,
+                    conflicts: conflicts
+                }
+            };
+        }
 
-        log.info(`Imported project ${project.name} from ${zipPath}`);
-
-        return { success: true, data: project };
+        // No conflicts - merge silently (imported files overwrite existing)
+        return await importProjectMerge(existing.id, zipPath);
     } catch (error: any) {
         log.error('Error importing project:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function importProjectNew(language: string, book: string, resource: string, zipPath: string): Promise<{success: boolean; data?: any; error?: string}> {
+    // This is the original import logic for new projects
+    const tempFolder = path.join(app.getPath('temp'), `writer20-import-${Date.now()}`);
+    fs.mkdirSync(tempFolder, { recursive: true });
+
+    await extract(zipPath, { dir: tempFolder });
+
+    // Create project in database
+    const project = db.createProject(language, book, resource);
+
+    // Create project folder
+    const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
+    if (!fs.existsSync(projectFolder)) {
+        fs.mkdirSync(projectFolder, { recursive: true });
+    }
+
+    // Create contents folder
+    const contentsFolder = path.join(projectFolder, 'contents');
+    if (!fs.existsSync(contentsFolder)) {
+        fs.mkdirSync(contentsFolder, { recursive: true });
+    }
+
+    // Move files from temp to contents folder
+    const tempContentsFolder = path.join(tempFolder, 'contents');
+    if (fs.existsSync(tempContentsFolder)) {
+        const files = fs.readdirSync(tempContentsFolder);
+        for (const file of files) {
+            const srcPath = path.join(tempContentsFolder, file);
+            const destPath = path.join(contentsFolder, file);
+            fs.copyFileSync(srcPath, destPath);
+        }
+    } else {
+        const files = fs.readdirSync(tempFolder);
+        for (const file of files) {
+            if (file !== 'manifest.json') {
+                const srcPath = path.join(tempFolder, file);
+                const destPath = path.join(contentsFolder, file);
+                fs.copyFileSync(srcPath, destPath);
+            }
+        }
+    }
+
+    // Cleanup temp folder
+    fs.rmSync(tempFolder, { recursive: true, force: true });
+
+    // Create/update manifest.json
+    const newManifestPath = path.join(projectFolder, 'manifest.json');
+    const manifest = {
+        package_version: 1,
+        format: "usfm",
+        generator: {
+            name: "writer20",
+            build: "1"
+        },
+        target_language: {
+            id: language
+        },
+        project: {
+            id: book
+        },
+        type: {
+            id: "text",
+            name: "Text"
+        },
+        resource: {
+            id: resource,
+            name: resource
+        }
+    };
+    fs.writeFileSync(newManifestPath, JSON.stringify(manifest, null, 2));
+
+    log.info(`Imported new project ${project.name} from ${zipPath}`);
+
+    return { success: true, data: project };
+}
+
+async function importProjectMerge(projectId: number, zipPath: string): Promise<{success: boolean; data?: any; error?: string}> {
+    // Merge imported files into existing project
+    const project = db.getProject(projectId);
+    if (!project) {
+        return { success: false, error: 'Project not found' };
+    }
+
+    const tempFolder = path.join(app.getPath('temp'), `writer20-import-${Date.now()}`);
+    fs.mkdirSync(tempFolder, { recursive: true });
+
+    await extract(zipPath, { dir: tempFolder });
+
+    const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
+    const contentsFolder = path.join(projectFolder, 'contents');
+
+    // Copy files from temp to contents folder (overwriting existing)
+    const tempContentsFolder = path.join(tempFolder, 'contents');
+    if (fs.existsSync(tempContentsFolder)) {
+        const files = fs.readdirSync(tempContentsFolder);
+        for (const file of files) {
+            const srcPath = path.join(tempContentsFolder, file);
+            const destPath = path.join(contentsFolder, file);
+            fs.copyFileSync(srcPath, destPath);
+        }
+    } else {
+        const files = fs.readdirSync(tempFolder);
+        for (const file of files) {
+            if (file !== 'manifest.json') {
+                const srcPath = path.join(tempFolder, file);
+                const destPath = path.join(contentsFolder, file);
+                fs.copyFileSync(srcPath, destPath);
+            }
+        }
+    }
+
+    // Cleanup temp folder
+    fs.rmSync(tempFolder, { recursive: true, force: true });
+
+    log.info(`Merged imported project ${project.name} from ${zipPath}`);
+
+    return { success: true, data: project };
+}
+
+export async function resolveConflict(filePath: string, acceptedContent: string) {
+    try {
+        if (!fs.existsSync(filePath)) {
+            return { success: false, error: 'File not found' };
+        }
+
+        // Write the accepted content to the file
+        fs.writeFileSync(filePath, acceptedContent, 'utf-8');
+        
+        log.info(`Resolved conflict for file: ${filePath}`);
+        return { success: true };
+    } catch (error: any) {
+        log.error('Error resolving conflict:', error);
         return { success: false, error: error.message };
     }
 }
