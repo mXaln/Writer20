@@ -79,12 +79,13 @@ export class ProjectExistsDialog extends LitElement {
 
             .dialog-actions {
                 display: flex;
-                flex-direction: column;
+                flex-direction: row;
+                justify-content: flex-end;
                 gap: 12px;
             }
 
             .btn {
-                padding: 12px 16px;
+                padding: 10px 16px;
                 border-radius: 4px;
                 border: none;
                 cursor: pointer;
@@ -95,6 +96,7 @@ export class ProjectExistsDialog extends LitElement {
                 justify-content: center;
                 gap: 8px;
                 transition: all 200ms ease-in-out;
+                flex: 1;
             }
 
             .btn-overwrite {

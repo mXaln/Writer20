@@ -1,6 +1,6 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
-import {msg} from '@lit/localize';
+import {msg, str} from '@lit/localize';
 import {MergeResult} from '../types';
 import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
@@ -116,6 +116,7 @@ export class MergeResultDialog extends LitElement {
 
     render() {
         const hasConflicts = this.mergeResult?.mergedWithConflicts || false;
+        const filesCount = this.mergeResult?.conflicts?.length || 0;
         
         return html`
             <div class="overlay">
@@ -137,7 +138,7 @@ export class MergeResultDialog extends LitElement {
                         </div>
                         ${hasConflicts && this.mergeResult?.conflicts ? html`
                             <div class="conflict-count">
-                                ${this.mergeResult.conflicts.length} file(s) with conflicts
+                                ${msg(str`${filesCount} file(s) with conflicts`)}
                             </div>
                         ` : ''}
                     </div>

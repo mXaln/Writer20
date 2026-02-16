@@ -18,6 +18,7 @@ import extract from 'extract-zip';
 import archiver from 'archiver';
 import { app } from 'electron';
 import * as fsMock from 'fs';
+import {ErrorCode} from "../error-codes";
 
 // Helper casts
 const fs = (fsMock as any).default;
@@ -60,7 +61,7 @@ describe('Project Business Service', () => {
             vi.mocked(db.getProjectByLanguageBookType).mockReturnValue({ id: 1 } as any);
             const result = await projectService.create('en', 'mat', 'ulb');
             expect(result.success).toBe(false);
-            expect(result.error).toMatch(/exists/);
+            expect(result.error).toMatch(ErrorCode.PROJECT_EXISTS);
         });
 
         // NEW: Test Git Error Handling
@@ -120,7 +121,7 @@ describe('Project Business Service', () => {
             vi.mocked(db.getProject).mockReturnValue(undefined);
             const result = projectService.get(99);
             expect(result.success).toBe(false);
-            expect(result.error).toBe('Project not found');
+            expect(result.error).toBe(ErrorCode.PROJECT_NOT_FOUND);
         });
 
         it('should handle db errors', () => {
@@ -162,7 +163,7 @@ describe('Project Business Service', () => {
             vi.mocked(db.getProject).mockReturnValue(undefined);
             const result = projectService.remove(99);
             expect(result.success).toBe(false);
-            expect(result.error).toBe('Project not found');
+            expect(result.error).toBe(ErrorCode.PROJECT_NOT_FOUND);
         });
     });
 
@@ -184,7 +185,7 @@ describe('Project Business Service', () => {
             const project = { id: 1, name: 'missing_project' };
             const result: any = await projectService.exportProject(project, 'out.zip');
             expect(result.success).toBe(false);
-            expect(result.error).toMatch(/folder not found/);
+            expect(result.error).toMatch(ErrorCode.PROJECT_FOLDER_NOT_FOUND);
         });
 
         // NEW: Test Archive Error
@@ -270,7 +271,7 @@ describe('Project Business Service', () => {
         it('should fail if zip file missing', async () => {
             const result: any = await projectService.importProject('/missing.zip');
             expect(result.success).toBe(false);
-            expect(result.error).toBe('Import file not found');
+            expect(result.error).toBe(ErrorCode.IMPORT_FILE_NOT_FOUND);
         });
     });
 

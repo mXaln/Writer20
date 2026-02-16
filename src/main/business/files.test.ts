@@ -14,6 +14,7 @@ import * as db from '../database';
 import { shell } from 'electron';
 import simpleGit from 'simple-git';
 import * as fsMock from 'fs';
+import {ErrorCode} from "../error-codes";
 
 // Access defaults and helpers
 const fs = (fsMock as any).default;
@@ -74,7 +75,7 @@ describe('File Service', () => {
             vi.mocked(db.getProject).mockReturnValue(null);
             const result = fileService.create(999);
             expect(result.success).toBe(false);
-            expect(result.error).toBe('Project not found');
+            expect(result.error).toBe(ErrorCode.PROJECT_NOT_FOUND);
         });
 
         it('should handle system errors gracefully', () => {
@@ -96,7 +97,7 @@ describe('File Service', () => {
         it('should return error if missing', () => {
             const result = fileService.read('/missing.txt');
             expect(result.success).toBe(false);
-            expect(result.error).toBe('File not found');
+            expect(result.error).toBe(ErrorCode.FILE_NOT_FOUND);
         });
 
         it('should handle read errors', () => {
@@ -213,7 +214,7 @@ describe('File Service', () => {
             vi.mocked(db.getProject).mockReturnValue(null);
             const result = fileService.listWithContent(99);
             expect(result.success).toBe(false);
-            expect(result.error).toBe('Project not found');
+            expect(result.error).toBe(ErrorCode.PROJECT_NOT_FOUND);
         });
 
         it('should handle errors', () => {
@@ -239,7 +240,7 @@ describe('File Service', () => {
         it('should return error if file missing', async () => {
             const result = await fileService.open('/missing.txt');
             expect(result.success).toBe(false);
-            expect(result.error).toBe('File not found');
+            expect(result.error).toBe(ErrorCode.FILE_NOT_FOUND);
         });
 
         it('should handle errors', async () => {
@@ -274,7 +275,7 @@ describe('File Service', () => {
         it('should return error if file does not exist', () => {
             const result = fileService.remove('/missing.txt', true);
             expect(result.success).toBe(false);
-            expect(result.error).toBe('File not found');
+            expect(result.error).toBe(ErrorCode.FILE_NOT_FOUND);
         });
 
         it('should handle fs deletion errors', () => {
@@ -321,7 +322,7 @@ describe('File Service', () => {
         it('should return error if file missing', async () => {
             const result = await fileService.resolveConflict('/missing.txt', 'data', 1);
             expect(result.success).toBe(false);
-            expect(result.error).toBe('File not found');
+            expect(result.error).toBe(ErrorCode.FILE_NOT_FOUND);
         });
 
         it('should resolve conflict and commit if no other conflicts exist', async () => {
