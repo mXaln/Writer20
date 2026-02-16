@@ -5,20 +5,32 @@ import fs from "fs";
 import log from "electron-log";
 import simpleGit from "simple-git";
 
+// Helper to get project and ensure contents folder exists
+function getProjectContentsFolder(projectId: number): { projectFolder: string; contentsFolder: string } | { error: string } {
+    const project = db.getProject(projectId);
+    if (!project) {
+        return { error: 'Project not found' };
+    }
+
+    const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
+    const contentsFolder = path.join(projectFolder, 'contents');
+
+    // Ensure contents folder exists
+    if (!fs.existsSync(contentsFolder)) {
+        fs.mkdirSync(contentsFolder, { recursive: true });
+    }
+
+    return { projectFolder, contentsFolder };
+}
+
 export function create(projectId: number) {
     try {
-        const project = db.getProject(projectId);
-        if (!project) {
-            return { success: false, error: 'Project not found' };
+        const projectResult = getProjectContentsFolder(projectId);
+        if ('error' in projectResult) {
+            return { success: false, error: projectResult.error };
         }
 
-        const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
-        const contentsFolder = path.join(projectFolder, 'contents');
-
-        // Create contents folder if it doesn't exist
-        if (!fs.existsSync(contentsFolder)) {
-            fs.mkdirSync(contentsFolder, { recursive: true });
-        }
+        const { contentsFolder } = projectResult;
 
         // Get existing files from contents folder
         const existingFiles = fs.readdirSync(contentsFolder)
@@ -47,7 +59,8 @@ export function create(projectId: number) {
         // Create empty file
         fs.writeFileSync(filePath, '', 'utf-8');
 
-        log.info(`Created file: ${fileName} in project ${project.name}/contents`);
+        const project = db.getProject(projectId);
+        log.info(`Created file: ${fileName} in project ${project?.name}/contents`);
 
         return { success: true, data: { id: fileName, name: fileName, path: filePath } };
     } catch (error: any) {
@@ -132,18 +145,12 @@ export function list(projectId: number) {
 
 export function listWithContent(projectId: number) {
     try {
-        const project = db.getProject(projectId);
-        if (!project) {
-            return { success: false, error: 'Project not found' };
+        const projectResult = getProjectContentsFolder(projectId);
+        if ('error' in projectResult) {
+            return { success: false, error: projectResult.error };
         }
 
-        const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
-        const contentsFolder = path.join(projectFolder, 'contents');
-
-        // Ensure contents folder exists
-        if (!fs.existsSync(contentsFolder)) {
-            fs.mkdirSync(contentsFolder, { recursive: true });
-        }
+        const { contentsFolder } = projectResult;
 
         // Generate 100 items
         const items: Array<{id: string; name: string; path: string; content: string}> = [];

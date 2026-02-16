@@ -527,29 +527,19 @@ export async function importWithOption(projectId: number, zipPath: string, optio
     return { success: false, error: 'Invalid option' };
 }
 
-async function importProjectNew(language: string, book: string, resource: string, zipPath: string): Promise<{success: boolean; data?: any; error?: string}> {
-    // This is the original import logic for new projects
+// Helper function to extract zip and copy files to contents folder
+async function extractAndCopyFiles(zipPath: string, projectFolder: string): Promise<string> {
     const tempFolder = path.join(app.getPath('temp'), `writer20-import-${Date.now()}`);
     fs.mkdirSync(tempFolder, { recursive: true });
 
     await extract(zipPath, { dir: tempFolder });
 
-    // Create project in database
-    const project = db.createProject(language, book, resource);
-
-    // Create project folder
-    const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
-    if (!fs.existsSync(projectFolder)) {
-        fs.mkdirSync(projectFolder, { recursive: true });
-    }
-
-    // Create contents folder
     const contentsFolder = path.join(projectFolder, 'contents');
     if (!fs.existsSync(contentsFolder)) {
         fs.mkdirSync(contentsFolder, { recursive: true });
     }
 
-    // Move files from temp to contents folder
+    // Copy files from temp to contents folder
     const tempContentsFolder = path.join(tempFolder, 'contents');
     if (fs.existsSync(tempContentsFolder)) {
         const files = fs.readdirSync(tempContentsFolder);
@@ -564,16 +554,18 @@ async function importProjectNew(language: string, book: string, resource: string
             if (file !== 'manifest.json') {
                 const srcPath = path.join(tempFolder, file);
                 const destPath = path.join(contentsFolder, file);
-                fs.copyFileSync(srcPath, destPath);
+                if (fs.statSync(srcPath).isFile()) {
+                    fs.copyFileSync(srcPath, destPath);
+                }
             }
         }
     }
 
-    // Cleanup temp folder
-    fs.rmSync(tempFolder, { recursive: true, force: true });
+    return tempFolder;
+}
 
-    // Create/update manifest.json
-    const newManifestPath = path.join(projectFolder, 'manifest.json');
+// Helper function to create manifest.json
+function createManifest(projectFolder: string, language: string, book: string, resource: string): void {
     const manifest = {
         package_version: 1,
         format: "usfm",
@@ -596,7 +588,29 @@ async function importProjectNew(language: string, book: string, resource: string
             name: resource
         }
     };
-    fs.writeFileSync(newManifestPath, JSON.stringify(manifest, null, 2));
+    const manifestPath = path.join(projectFolder, 'manifest.json');
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+}
+
+async function importProjectNew(language: string, book: string, resource: string, zipPath: string): Promise<{success: boolean; data?: any; error?: string}> {
+    // This is the original import logic for new projects
+    // Create project in database
+    const project = db.createProject(language, book, resource);
+
+    // Create project folder
+    const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
+    if (!fs.existsSync(projectFolder)) {
+        fs.mkdirSync(projectFolder, { recursive: true });
+    }
+
+    // Extract zip and copy files
+    const tempFolder = await extractAndCopyFiles(zipPath, projectFolder);
+
+    // Cleanup temp folder
+    fs.rmSync(tempFolder, { recursive: true, force: true });
+
+    // Create manifest.json
+    createManifest(projectFolder, language, book, resource);
 
     // Initialize git repository
     try {
@@ -621,33 +635,10 @@ async function importProjectMerge(projectId: number, zipPath: string): Promise<{
         return { success: false, error: 'Project not found' };
     }
 
-    const tempFolder = path.join(app.getPath('temp'), `writer20-import-${Date.now()}`);
-    fs.mkdirSync(tempFolder, { recursive: true });
-
-    await extract(zipPath, { dir: tempFolder });
-
     const projectFolder = path.join(app.getPath('home'), 'Writer20', project.name);
-    const contentsFolder = path.join(projectFolder, 'contents');
 
-    // Copy files from temp to contents folder (overwriting existing)
-    const tempContentsFolder = path.join(tempFolder, 'contents');
-    if (fs.existsSync(tempContentsFolder)) {
-        const files = fs.readdirSync(tempContentsFolder);
-        for (const file of files) {
-            const srcPath = path.join(tempContentsFolder, file);
-            const destPath = path.join(contentsFolder, file);
-            fs.copyFileSync(srcPath, destPath);
-        }
-    } else {
-        const files = fs.readdirSync(tempFolder);
-        for (const file of files) {
-            if (file !== 'manifest.json') {
-                const srcPath = path.join(tempFolder, file);
-                const destPath = path.join(contentsFolder, file);
-                fs.copyFileSync(srcPath, destPath);
-            }
-        }
-    }
+    // Extract zip and copy files
+    const tempFolder = await extractAndCopyFiles(zipPath, projectFolder);
 
     // Cleanup temp folder
     fs.rmSync(tempFolder, { recursive: true, force: true });
