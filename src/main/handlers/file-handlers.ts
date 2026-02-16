@@ -32,5 +32,14 @@ export function setupFileHandlers(): void {
     return Files.remove(filePath, deleteFromDisk);
   });
 
+  // Conflict resolution handlers
+  ipcMain.handle('file:getConflictedFiles', async (_event, projectId: number) => {
+    return { success: true, data: Files.getConflictedFiles(projectId) };
+  });
+
+  ipcMain.handle('file:resolveConflict', async (_event, filePath: string, acceptedContent: string, projectId: number) => {
+    return Files.resolveConflict(filePath, acceptedContent, projectId);
+  });
+
   log.info('File handlers registered');
 }

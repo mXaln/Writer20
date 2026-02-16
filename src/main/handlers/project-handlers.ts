@@ -64,14 +64,6 @@ export function setupProjectHandlers(): void {
     return importResult;
   });
 
-  ipcMain.handle('project:resolveConflict', async (_event, filePath: string, acceptedContent: string, projectId: number) => {
-    return Projects.resolveConflict(filePath, acceptedContent, projectId);
-  });
-
-  ipcMain.handle('project:getConflictedFiles', async (_event, projectId: number) => {
-    return { success: true, data: Projects.getConflictedFiles(projectId) };
-  });
-
   ipcMain.handle('project:importWithOption', async (_event, projectId: number, zipPath: string, option: 'overwrite' | 'merge' | 'cancel') => {
     return Projects.importWithOption(projectId, zipPath, option);
   });

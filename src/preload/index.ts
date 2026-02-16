@@ -16,11 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('project:export', id),
   importProject: () =>
     ipcRenderer.invoke('project:import'),
-  resolveConflict: (filePath: string, acceptedContent: string, projectId: number) =>
-    ipcRenderer.invoke('project:resolveConflict', filePath, acceptedContent, projectId),
-  getConflictedFiles: (projectId: number) =>
-    ipcRenderer.invoke('project:getConflictedFiles', projectId),
-  importWithOption: (projectId: number, zipPath: string, option: 'overwrite' | 'ff' | 'cancel') =>
+  importWithOption: (projectId: number, zipPath: string, option: 'overwrite' | 'merge' | 'cancel') =>
     ipcRenderer.invoke('project:importWithOption', projectId, zipPath, option),
 
   // File operations
@@ -40,6 +36,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('file:open', filePath),
   removeFile: (filePath: string, deleteFromDisk: boolean) =>
     ipcRenderer.invoke('file:remove', filePath, deleteFromDisk),
+  getConflictedFiles: (projectId: number) =>
+      ipcRenderer.invoke('file:getConflictedFiles', projectId),
+  resolveConflict: (filePath: string, acceptedContent: string, projectId: number) =>
+      ipcRenderer.invoke('file:resolveConflict', filePath, acceptedContent, projectId),
 
   // Settings
   getSettings: () =>
