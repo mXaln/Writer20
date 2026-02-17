@@ -17,35 +17,6 @@ export class SettingsScreen extends AppScreen {
                 max-width: 600px;
             }
 
-            .header {
-                margin-bottom: 24px;
-            }
-
-            .back-btn {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                background: none;
-                border: none;
-                padding: 8px 12px;
-                cursor: pointer;
-                color: var(--text-secondary);
-                border-radius: 4px;
-                transition: all 200ms ease-in-out;
-            }
-
-            .back-btn:hover {
-                background-color: rgba(0, 0, 0, 0.1);
-                color: var(--text-primary);
-            }
-
-            .title {
-                font-size: 24px;
-                font-weight: 600;
-                color: var(--text-primary);
-                margin-bottom: 24px;
-            }
-
             .settings-section {
                 background-color: var(--surface);
                 border-radius: 8px;
@@ -147,7 +118,7 @@ export class SettingsScreen extends AppScreen {
                 color: var(--text-secondary);
             }
         `
-    ];
+    ] as any;
 
     @property({type: String}) theme: Theme = 'system';
     @property({type: String}) language: Language = 'en';
@@ -182,7 +153,7 @@ export class SettingsScreen extends AppScreen {
     render() {
         return html`
             <div class="header">
-                <button class="back-btn" @click=${this.goBack}>
+                <button class="btn borderless-btn" @click=${this.goBack}>
                     <span class="material-icons">arrow_back</span>
                     ${msg('Back')}
                 </button>
@@ -241,11 +212,5 @@ export class SettingsScreen extends AppScreen {
                 </div>
             </div>
         `;
-    }
-}
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'settings-screen': SettingsScreen;
     }
 }

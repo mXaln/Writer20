@@ -1,17 +1,13 @@
-import {LitElement, html, css} from 'lit';
+import {html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {msg, str} from '@lit/localize';
-import {MergeResult} from '../types';
-import {baseStyles} from "../styles/base";
-import {fontStyles} from "../styles/fonts";
-import {DialogMixin, dialogStyles} from '../mixins/dialog-mixin';
+import {MergeResult} from '../../types';
+import {DialogElement} from '../../mixins/dialog-mixin';
 
 @customElement('merge-result-dialog')
-export class MergeResultDialog extends DialogMixin(LitElement) {
+export class MergeResultDialog extends DialogElement {
     static styles = [
-        baseStyles,
-        fontStyles,
-        dialogStyles,
+        DialogElement.styles,
         css`
             .dialog {
                 min-width: 350px;
@@ -38,7 +34,7 @@ export class MergeResultDialog extends DialogMixin(LitElement) {
                 margin-top: 12px;
             }
         `
-    ];
+    ] as any;
 
     @property({type: Object}) mergeResult!: MergeResult;
 
@@ -87,11 +83,5 @@ export class MergeResultDialog extends DialogMixin(LitElement) {
                 </button>
             </div>
         `);
-    }
-}
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'merge-result-dialog': MergeResultDialog;
     }
 }

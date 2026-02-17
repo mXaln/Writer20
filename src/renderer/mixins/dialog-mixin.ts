@@ -1,125 +1,25 @@
-import {LitElement, html, css, PropertyValues} from 'lit';
-import {property, state} from 'lit/decorators.js';
+import {LitElement, html, css} from 'lit';
+import {property} from 'lit/decorators.js';
+import {baseStyles} from "../styles/base";
+import {controlStyles} from "../styles/control";
+import {fontStyles} from "../styles/fonts";
 
 /**
  * Type helper for class constructors
  */
-type Constructor<T = object> = new (...args: any[]) => T;
+type Constructor<T> = new (...args: any[]) => T;
 
-/**
- * Shared dialog styles - import and use in your dialog's static styles
- * 
- * Usage:
- * ```typescript
- * import { dialogStyles } from '../mixins/dialog-mixin';
- * 
- * static styles = [dialogStyles, css`...custom styles...`];
- * ```
- */
-export const dialogStyles = css`
-    @keyframes dialogZoomIn {
-        from {
-            transform: scale(0.7);
-            opacity: 0;
-        }
-        to {
-            transform: scale(1);
-            opacity: 1;
-        }
-    }
-
-    .overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-    }
-
-    .dialog {
-        background-color: var(--surface);
-        border-radius: 8px;
-        box-shadow: var(--shadow-elevated);
-        padding: 24px;
-        animation: dialogZoomIn 200ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    }
-
-    .dialog-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-
-    .dialog-icon {
-        font-size: 32px;
-    }
-
-    .dialog-title {
-        font-size: 20px;
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-
-    .dialog-content {
-        margin-bottom: 24px;
-        color: var(--text-secondary);
-    }
-
-    .dialog-actions {
-        display: flex;
-        flex-direction: row;
-        justify-content: flex-end;
-        gap: 12px;
-    }
-
-    .btn {
-        padding: 10px 16px;
-        border-radius: 4px;
-        border: none;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        transition: all 200ms ease-in-out;
-    }
-
-    .btn-primary {
-        background-color: var(--primary);
-        color: white;
-    }
-
-    .btn-primary:hover {
-        background-color: var(--primary-hover);
-    }
-
-    .btn-secondary {
-        background-color: var(--bg-secondary);
-        color: var(--text-primary);
-        border: 1px solid var(--border);
-    }
-
-    .btn-secondary:hover {
-        background-color: var(--border);
-    }
-
-    .btn-danger {
-        background-color: #f44336;
-        color: white;
-    }
-
-    .btn-danger:hover {
-        background-color: #d32f2f;
-    }
-`;
+export declare class DialogInterface {
+    open: boolean;
+    backdropOpacity: number;
+    dialogMinWidth: string;
+    dialogMaxWidth: string;
+    dialogPadding: string;
+    closeOnOverlayClick: boolean;
+    renderOverlay(content: unknown): unknown;
+    close(): void;
+    openDialog(): void;
+}
 
 /**
  * DialogMixin - Shared behavior for dialog components
@@ -142,44 +42,111 @@ export const dialogStyles = css`
  * }
  * ```
  */
-export function DialogMixin<T extends Constructor<LitElement>>(superClass: T) {
-    class DialogMixinClass extends superClass {
-        constructor(...args: any[]) {
-            super(...args);
-        }
-        
-        /** Whether the dialog is visible */
-        @property({type: Boolean, reflect: true}) 
-        open = false;
 
-        /** Dialog backdrop opacity */
-        @property({type: Number}) 
-        backdropOpacity = 0.5;
+export const Dialog =
+    <T extends Constructor<LitElement>>(superClass: T) => {
+        class DialogElement extends superClass {
+            static styles = [
+                (superClass as unknown as typeof LitElement).styles ?? [],
+                baseStyles,
+                controlStyles,
+                fontStyles,
+                css`
+                    @keyframes dialogZoomIn {
+                        from {
+                            transform: scale(0.7);
+                            opacity: 0;
+                        }
+                        to {
+                            transform: scale(1);
+                            opacity: 1;
+                        }
+                    }
 
-        /** Dialog minimum width */
-        @property({type: String}) 
-        dialogMinWidth = '350px';
+                    .overlay {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background-color: rgba(0, 0, 0, 0.5);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 1000;
+                    }
 
-        /** Dialog maximum width */
-        @property({type: String}) 
-        dialogMaxWidth = '500px';
+                    .dialog {
+                        background-color: var(--surface);
+                        border-radius: 8px;
+                        box-shadow: var(--shadow-elevated);
+                        padding: 24px;
+                        animation: dialogZoomIn 200ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+                    }
 
-        /** Dialog padding */
-        @property({type: String}) 
-        dialogPadding = '24px';
+                    .dialog-header {
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        margin-bottom: 16px;
+                    }
 
-        /** Whether clicking overlay closes dialog */
-        @property({type: Boolean}) 
-        closeOnOverlayClick = true;
+                    .dialog-icon {
+                        font-size: 32px;
+                    }
 
-        /** 
-         * Render the dialog overlay with content
-         * Call this in your render() method
-         */
-        renderOverlay(content: unknown) {
-            if (!this.open) return null;
-            
-            return html`
+                    .dialog-title {
+                        font-size: 20px;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                    }
+
+                    .dialog-content {
+                        margin-bottom: 24px;
+                        color: var(--text-secondary);
+                    }
+
+                    .dialog-actions {
+                        display: flex;
+                        flex-direction: row;
+                        justify-content: flex-end;
+                        gap: 12px;
+                    }
+                `
+            ];
+
+            /** Whether the dialog is visible */
+            @property({type: Boolean, reflect: true})
+            open = false;
+
+            /** Dialog backdrop opacity */
+            @property({type: Number})
+            backdropOpacity = 0.5;
+
+            /** Dialog minimum width */
+            @property({type: String})
+            dialogMinWidth = '350px';
+
+            /** Dialog maximum width */
+            @property({type: String})
+            dialogMaxWidth = '500px';
+
+            /** Dialog padding */
+            @property({type: String})
+            dialogPadding = '24px';
+
+            /** Whether clicking overlay closes dialog */
+            @property({type: Boolean})
+            closeOnOverlayClick = true;
+
+            /**
+             * Render the dialog overlay with content
+             * Call this in your render() method
+             */
+            renderOverlay(content: unknown) {
+                if (!this.open) return null;
+
+                return html`
                 <div 
                     class="overlay"
                     style="--dialog-backdrop-opacity: ${this.backdropOpacity}; --dialog-min-width: ${this.dialogMinWidth}; --dialog-max-width: ${this.dialogMaxWidth}; --dialog-padding: ${this.dialogPadding}"
@@ -190,51 +157,46 @@ export function DialogMixin<T extends Constructor<LitElement>>(superClass: T) {
                     </div>
                 </div>
             `;
-        }
+            }
 
-        private _handleOverlayClick() {
-            if (this.closeOnOverlayClick) {
-                // Dispatch event so parent can reset its state
+            private _handleOverlayClick() {
+                if (this.closeOnOverlayClick) {
+                    // Dispatch event so parent can reset its state
+                    this.dispatchEvent(new CustomEvent('dialog-close', {
+                        bubbles: true,
+                        composed: true
+                    }));
+                    this.close();
+                }
+            }
+
+            private _stopPropagation(e: Event) {
+                e.stopPropagation();
+            }
+
+            /**
+             * Close the dialog and dispatch close event
+             */
+            close() {
+                this.open = false;
                 this.dispatchEvent(new CustomEvent('dialog-close', {
                     bubbles: true,
                     composed: true
                 }));
-                this.close();
+            }
+
+            /**
+             * Open the dialog
+             */
+            openDialog() {
+                this.open = true;
+                this.dispatchEvent(new CustomEvent('dialog-open', {
+                    bubbles: true,
+                    composed: true
+                }));
             }
         }
+        return DialogElement as Constructor<DialogInterface> & T;
+    };
 
-        private _stopPropagation(e: Event) {
-            e.stopPropagation();
-        }
-
-        /** 
-         * Close the dialog and dispatch close event
-         */
-        close() {
-            this.open = false;
-            this.dispatchEvent(new CustomEvent('dialog-close', {
-                bubbles: true,
-                composed: true
-            }));
-        }
-
-        /** 
-         * Open the dialog
-         */
-        openDialog() {
-            this.open = true;
-            this.dispatchEvent(new CustomEvent('dialog-open', {
-                bubbles: true,
-                composed: true
-            }));
-        }
-    }
-
-    return DialogMixinClass;
-}
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'dialog-mixin': InstanceType<ReturnType<typeof DialogMixin>>;
-    }
-}
+export const DialogElement = Dialog(LitElement);

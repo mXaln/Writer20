@@ -9,42 +9,11 @@ import '@lit-labs/virtualizer';
 
 @customElement('workflow-screen')
 export class WorkflowScreen extends AppScreen {
-    static styles = [
+    static override styles = [
         AppScreen.styles,
         css`
             :host {
                 display: block;
-            }
-
-            .header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 24px;
-            }
-
-            .header-left {
-                display: flex;
-                align-items: center;
-                gap: 16px;
-            }
-
-            .back-btn {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                background: none;
-                border: none;
-                padding: 8px 12px;
-                cursor: pointer;
-                color: var(--text-secondary);
-                border-radius: 4px;
-                transition: all 200ms ease-in-out;
-            }
-
-            .back-btn:hover {
-                background-color: rgba(0, 0, 0, 0.1);
-                color: var(--text-primary);
             }
 
             .project-title {
@@ -76,11 +45,6 @@ export class WorkflowScreen extends AppScreen {
                 border-bottom: 1px solid var(--border);
             }
 
-            .files-list {
-                flex: 1;
-                overflow-y: auto;
-            }
-
             .files-header {
                 display: flex;
                 justify-content: space-between;
@@ -92,14 +56,6 @@ export class WorkflowScreen extends AppScreen {
             .files-title {
                 font-size: 16px;
                 font-weight: 600;
-            }
-
-            .file-item {
-                border-bottom: 1px solid var(--border);
-            }
-
-            .file-item:last-child {
-                border-bottom: none;
             }
 
             .file-header {
@@ -118,19 +74,6 @@ export class WorkflowScreen extends AppScreen {
             .file-actions {
                 display: flex;
                 gap: 8px;
-            }
-
-            .icon-btn {
-                background: none;
-                border: none;
-                padding: 6px;
-                cursor: pointer;
-                color: var(--text-secondary);
-                border-radius: 4px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: all 200ms ease-in-out;
             }
 
             .file-content {
@@ -172,52 +115,14 @@ export class WorkflowScreen extends AppScreen {
             .content-edit:focus {
                 border-color: var(--primary-hover);
             }
-
-            .empty-state {
-                text-align: center;
-                padding: 48px;
-                color: var(--text-secondary);
-            }
-
-            .error-toast {
-                position: fixed;
-                bottom: 24px;
-                right: 24px;
-                background-color: var(--error);
-                color: white;
-                padding: 12px 24px;
-                border-radius: 4px;
-                box-shadow: var(--shadow-elevated);
-                z-index: 1001;
-                animation: slideIn 200ms ease-out;
-            }
-
-            @keyframes slideIn {
-                from {
-                    transform: translateY(20px);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateY(0);
-                    opacity: 1;
-                }
-            }
-
-            .loading {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 48px;
-                color: var(--text-secondary);
-            }
         `
-    ];
+    ] as any;
 
     @property({type: Number}) projectId!: number;
     @state() private project: Project | null = null;
     @state() private files: FileItem[] = [];
     @state() protected loading = true;
-    @state() private error = '';
+    @state() protected error = '';
     @state() private editingFileId: string | null = null;
     @state() private fileContents: Map<string, string> = new Map();
     @state() private conflicts: Map<string, FileConflict> = new Map();
@@ -460,7 +365,7 @@ export class WorkflowScreen extends AppScreen {
         return html`
             <div class="header">
                 <div class="header-left">
-                    <button class="back-btn" @click=${this.goBack}>
+                    <button class="btn borderless-btn" @click=${this.goBack}>
                         <span class="material-icons">arrow_back</span>
                         ${msg('Back')}
                     </button>
@@ -503,11 +408,5 @@ export class WorkflowScreen extends AppScreen {
                 <div class="error-toast">${this.error}</div>
             ` : ''}
         `;
-    }
-}
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'workflow-screen': WorkflowScreen;
     }
 }

@@ -1,6 +1,7 @@
 import {LitElement, css, html, TemplateResult} from 'lit';
 import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
+import {controlStyles} from "../styles/control";
 
 /**
  * Base Screen class for all screens in the application
@@ -20,6 +21,7 @@ import {fontStyles} from "../styles/fonts";
 export abstract class AppScreen extends LitElement {
     static styles = [
         baseStyles,
+        controlStyles,
         fontStyles,
         css`
         :host {
@@ -108,6 +110,63 @@ export abstract class AppScreen extends LitElement {
         .animate-slide-down {
             animation: slideDown 250ms ease-out forwards;
         }
+
+        /* ===============================
+        Common Screen Elements
+        =============================== */
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            position: relative;
+            min-height: 40px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* Title */
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 48px;
+            color: var(--text-secondary);
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px;
+            color: var(--text-secondary);
+        }
+
+        /* Error Toast */
+        .error-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background-color: var(--error);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            box-shadow: var(--shadow-elevated);
+            z-index: 1001;
+            animation: slideIn 200ms ease-out;
+        }
     `
     ];
 
@@ -121,7 +180,7 @@ export abstract class AppScreen extends LitElement {
     protected loading = false;
 
     /** Error message */
-    error: string | null | '' = null;
+    protected error: string | null | '' = null;
 
     /** 
      * Get the animation class based on animation property

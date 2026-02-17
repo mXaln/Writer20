@@ -7,33 +7,18 @@ import {ProjectController} from '../../controllers/project-controller';
 import {AppScreen} from '../app-screen';
 import '@lit-labs/virtualizer';
 import './project-card';
-import './project-info-dialog';
-import './create-project-dialog';
-import '../confirm-dialog';
+import '../dialogs/project-info-dialog';
+import '../dialogs/create-project-dialog';
+import '../dialogs/confirm-dialog';
 
 @customElement('dashboard-screen')
 export class DashboardScreen extends AppScreen {
-    static styles = [
+    static override styles = [
         AppScreen.styles,
         css`
             :host {
                 display: flex;
                 flex-direction: column;
-            }
-
-            .header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 24px;
-                position: relative;
-                min-height: 40px;
-            }
-
-            .title {
-                font-size: 24px;
-                font-weight: 600;
-                color: var(--text-primary);
             }
 
             .fab {
@@ -75,14 +60,8 @@ export class DashboardScreen extends AppScreen {
                 color: var(--text-secondary);
                 flex: 1;
             }
-
-            .empty-state {
-                text-align: center;
-                padding: 48px;
-                color: var(--text-secondary);
-            }
         `
-    ];
+    ] as any;
 
     // Initialize the ProjectController
     private projectsCtrl = new ProjectController(this);
@@ -95,7 +74,7 @@ export class DashboardScreen extends AppScreen {
     @state() private confirmMessage = '';
     @state() private confirmVariant: 'primary' | 'danger' = 'primary';
     @state() private selectedProject: Project | null = null;
-    @state() protected error = '';
+    @state() protected error: string | null | '' = '';
 
     async connectedCallback() {
         super.connectedCallback();
@@ -254,11 +233,5 @@ export class DashboardScreen extends AppScreen {
                 @dialog-close=${this.handleConfirmDialogCancel}
             ></confirm-dialog>
         `;
-    }
-}
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'dashboard-screen': DashboardScreen;
     }
 }

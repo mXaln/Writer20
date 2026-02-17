@@ -6,8 +6,8 @@ import {fontStyles} from "../styles/fonts";
 import {localized, msg} from '@lit/localize';
 const {setLocale} = await import('../i18n/localization');
 import {Theme, Language, ImportOption, ProjectExistsResult, MergeResult} from '../types';
-import './project-exists-dialog';
-import './merge-result-dialog';
+import './dialogs/project-exists-dialog';
+import './dialogs/merge-result-dialog';
 
 type Screen = 'dashboard' | 'workflow' | 'settings';
 
@@ -121,14 +121,6 @@ export class AppShell extends LitElement {
                 flex-direction: column;
             }
 
-            .content.slide-in-right {
-                animation: slideInRight 250ms ease-out forwards;
-            }
-
-            .content.slide-in-left {
-                animation: slideInLeft 250ms ease-out forwards;
-            }
-
             @media (max-width: 768px) {
                 .nav-panel {
                     width: 60px;
@@ -217,26 +209,6 @@ export class AppShell extends LitElement {
         if (screen === 'workflow' && projectId) {
             this.currentProjectId = projectId;
         }
-    }
-
-    private getScreenAnimationClass(): string {
-        // Workflow comes from dashboard (slide right)
-        if (this.currentScreen === 'workflow' && this.previousScreen === 'dashboard') {
-            return 'slide-in-right';
-        }
-        // Going back to dashboard from workflow
-        if (this.currentScreen === 'dashboard' && this.previousScreen === 'workflow') {
-            return 'slide-in-left';
-        }
-        // Settings comes from dashboard (slide right)
-        if (this.currentScreen === 'settings' && this.previousScreen === 'dashboard') {
-            return 'slide-in-right';
-        }
-        // Going back to dashboard from settings
-        if (this.currentScreen === 'dashboard' && this.previousScreen === 'settings') {
-            return 'slide-in-left';
-        }
-        return '';
     }
 
     private async importProject() {
@@ -376,7 +348,7 @@ export class AppShell extends LitElement {
                     </nav>
                 ` : ''}
 
-                <main class="content ${this.getScreenAnimationClass()}" @click=${this.closeMenu}>
+                <main class="content" @click=${this.closeMenu}>
                     ${this.currentScreen === 'dashboard' ? html`
                         <dashboard-screen
                                 @navigate-to-workflow=${(e: CustomEvent) => this.navigateTo('workflow', e.detail.projectId)}
@@ -415,11 +387,5 @@ export class AppShell extends LitElement {
                         @merge-result-closed=${this.handleMergeResultClosed}
                 ></merge-result-dialog>
         `;
-    }
-}
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'app-shell': AppShell;
     }
 }

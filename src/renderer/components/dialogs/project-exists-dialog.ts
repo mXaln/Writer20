@@ -1,17 +1,13 @@
-import {LitElement, html, css} from 'lit';
+import {html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {msg} from '@lit/localize';
-import {ProjectExistsResult} from '../types';
-import {baseStyles} from "../styles/base";
-import {fontStyles} from "../styles/fonts";
-import {DialogMixin, dialogStyles} from '../mixins/dialog-mixin';
+import {ProjectExistsResult} from '../../types';
+import {DialogElement} from "../../mixins/dialog-mixin";
 
 @customElement('project-exists-dialog')
-export class ProjectExistsDialog extends DialogMixin(LitElement) {
-    static styles = [
-        baseStyles,
-        fontStyles,
-        dialogStyles,
+export class ProjectExistsDialog extends DialogElement {
+    static override styles = [
+        DialogElement.styles,
         css`
             .dialog {
                 min-width: 400px;
@@ -36,7 +32,7 @@ export class ProjectExistsDialog extends DialogMixin(LitElement) {
                 color: var(--text-secondary);
             }
         `
-    ];
+    ] as any;
 
     @property({type: Object}) existsResult!: ProjectExistsResult;
 
@@ -105,11 +101,5 @@ export class ProjectExistsDialog extends DialogMixin(LitElement) {
                 </button>
             </div>
         `);
-    }
-}
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'project-exists-dialog': ProjectExistsDialog;
     }
 }

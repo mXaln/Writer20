@@ -1,16 +1,12 @@
-import {LitElement, html, css} from 'lit';
+import {html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
-import {msg, str} from '@lit/localize';
-import {baseStyles} from "../styles/base";
-import {fontStyles} from "../styles/fonts";
-import {DialogMixin, dialogStyles} from '../mixins/dialog-mixin';
+import {msg} from '@lit/localize';
+import {DialogElement} from '../../mixins/dialog-mixin';
 
 @customElement('confirm-dialog')
-export class ConfirmDialog extends DialogMixin(LitElement) {
+export class ConfirmDialog extends DialogElement {
     static styles = [
-        baseStyles,
-        fontStyles,
-        dialogStyles,
+        DialogElement.styles,
         css`
             .dialog {
                 min-width: 350px;
@@ -27,7 +23,7 @@ export class ConfirmDialog extends DialogMixin(LitElement) {
                 line-height: 1.5;
             }
         `
-    ];
+    ] as any;
 
     @property({type: String}) title = msg('Confirm');
     @property({type: String}) message = '';
@@ -78,11 +74,5 @@ export class ConfirmDialog extends DialogMixin(LitElement) {
                 </button>
             </div>
         `);
-    }
-}
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'confirm-dialog': ConfirmDialog;
     }
 }

@@ -1,16 +1,12 @@
-import {LitElement, html, css} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
+import {html, css} from 'lit';
+import {customElement, state} from 'lit/decorators.js';
 import {msg} from '@lit/localize';
-import {baseStyles} from "../../styles/base";
-import {fontStyles} from "../../styles/fonts";
-import {DialogMixin, dialogStyles} from "../../mixins/dialog-mixin";
+import {DialogElement} from "../../mixins/dialog-mixin";
 
 @customElement('create-project-dialog')
-export class CreateProjectDialog extends DialogMixin(LitElement) {
+export class CreateProjectDialog extends DialogElement {
     static styles = [
-        baseStyles,
-        fontStyles,
-        dialogStyles,
+        DialogElement.styles,
         css`
             .dialog {
                 min-width: 400px;
@@ -70,7 +66,7 @@ export class CreateProjectDialog extends DialogMixin(LitElement) {
                 color: var(--text-primary);
             }
         `
-    ];
+    ] as any;
 
     // Internal form state
     @state() private language = '';
@@ -216,11 +212,5 @@ export class CreateProjectDialog extends DialogMixin(LitElement) {
                 </button>
             </div>
         `);
-    }
-}
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'create-project-dialog': CreateProjectDialog;
     }
 }
