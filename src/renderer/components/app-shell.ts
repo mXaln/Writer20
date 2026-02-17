@@ -1,15 +1,14 @@
-import {LitElement, html, css} from 'lit';
+import {css, html, LitElement} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
-import {getThemeCSS, getEffectiveTheme} from '../styles/theme';
+import {Router} from '@lit-labs/router';
+import {getEffectiveTheme, getThemeCSS} from '../styles/theme';
 import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
 import {localized, msg} from '@lit/localize';
 const {setLocale} = await import('../i18n/localization');
-import {Theme, Language, ImportOption, ProjectExistsResult, MergeResult} from '../types';
+import {ImportOption, Language, MergeResult, ProjectExistsResult, Theme} from '../types';
 import './dialogs/project-exists-dialog';
 import './dialogs/merge-result-dialog';
-
-type Screen = 'dashboard' | 'workflow' | 'settings';
 
 @customElement('app-shell')
 @localized()
@@ -129,21 +128,55 @@ export class AppShell extends LitElement {
         `
     ];
 
-    @state() private currentScreen: Screen = 'dashboard';
-    @state() private navigationStack: Screen[] = []; // Stack of previous screens
+    private router = new Router(this, [
+        {
+            path: '/',
+            render: () => {
+                return html`<dashboard-screen 
+                        @navigate-to-workflow=${(e: CustomEvent) => this.navigateTo(`/workflow/${e.detail.projectId}`)}
+                ></dashboard-screen>`
+            }
+        },
+        {
+            path: '/workflow/:projectId',
+            render: ({projectId}) => {
+                return html`<workflow-screen 
+                        .projectId=${projectId}
+                        @navigate-back=${this.navigateBack}
+                ></workflow-screen>`;
+            }
+        },
+        {
+            path: '/settings',
+            render: () => {
+                return html`
+                    <settings-screen
+                            .theme=${this.theme}
+                            .language=${this.language}
+                            @theme-change=${(e: CustomEvent) => this.handleThemeChange(e.detail.theme)}
+                            @language-change=${(e: CustomEvent) => this.handleLanguageChange(e.detail.language)}
+                            @navigate-back=${this.navigateBack}
+                    ></settings-screen>`
+            }
+        },
+    ]);
+
     @state() private theme: Theme = 'system';
     @state() private language: Language = 'en';
-    @state() private currentProjectId: number | null = null;
     @state() private showMenu = false;
     @state() private showProjectExistsDialog = false;
     @state() private projectExistsResult: ProjectExistsResult | null = null;
     @state() private showMergeResultDialog = false;
     @state() private mergeResult: MergeResult | null = null;
+    @state() private navigationStack: string[] = [];
 
     async connectedCallback() {
         super.connectedCallback();
         await this.loadSettings();
         this.applyTheme();
+
+        // Navigate to initial route after settings are loaded
+        await this.router.goto('/');
 
         // Listen for system theme changes
         if (window.matchMedia) {
@@ -202,30 +235,6 @@ export class AppShell extends LitElement {
         this.requestUpdate();
     }
 
-    private navigateTo(screen: Screen, projectId?: number) {
-        // Push current screen to stack before navigating
-        this.navigationStack = [...this.navigationStack, this.currentScreen];
-        this.currentScreen = screen;
-        this.showMenu = false;
-        if (screen === 'workflow' && projectId) {
-            this.currentProjectId = projectId;
-        }
-    }
-
-    private goBack() {
-        // Pop from stack to go back
-        if (this.navigationStack.length === 0) return;
-        
-        const target = this.navigationStack[this.navigationStack.length - 1];
-        this.navigationStack = this.navigationStack.slice(0, -1);
-        
-        this.currentScreen = target;
-        // Clear project ID if going back to dashboard
-        if (target === 'dashboard') {
-            this.currentProjectId = null;
-        }
-    }
-
     private async importProject() {
         this.showMenu = false;
         try {
@@ -254,6 +263,24 @@ export class AppShell extends LitElement {
         }
     }
 
+    private async navigateTo(pathname: string) {
+        this.navigationStack.push(pathname);
+        await this.router.goto(pathname);
+    }
+
+    private async navigateBack() {
+        // Pop from stack to go back
+        this.navigationStack.pop();
+        if (this.navigationStack.length === 0) {
+            return await this.router.goto("/")
+        }
+
+        const target = this.navigationStack[this.navigationStack.length - 1];
+        if (!target) return await this.router.goto("/");
+
+        await this.router.goto(target);
+    }
+
     private async handleImportOption(e: CustomEvent<{option: ImportOption}>) {
         const option = e.detail.option;
         this.showProjectExistsDialog = false;
@@ -279,8 +306,7 @@ export class AppShell extends LitElement {
                 if (result.data) {
                     // Check if there are conflicts after merge
                     if (typeof result.data === 'object' && 'mergedWithConflicts' in result.data) {
-                        const mergeResult = result.data as MergeResult;
-                        this.mergeResult = mergeResult;
+                        this.mergeResult = result.data as MergeResult;
                         this.projectExistsResult = null;
                         
                         // Show merge result dialog
@@ -307,14 +333,13 @@ export class AppShell extends LitElement {
         this.projectExistsResult = null;
     }
 
-    private handleMergeResultClosed(e: CustomEvent<{hasConflicts: boolean}>) {
+    private async handleMergeResultClosed(e: CustomEvent<{hasConflicts: boolean}>) {
         this.showMergeResultDialog = false;
         const hasConflicts = e.detail.hasConflicts;
         
         if (hasConflicts && this.mergeResult) {
             // Navigate to workflow to resolve conflicts
-            this.currentProjectId = this.mergeResult.projectId;
-            this.currentScreen = 'workflow';
+            await this.navigateTo(`/workflow/${this.mergeResult.projectId}`);
         } else {
             // Just refresh dashboard
             this.dispatchEvent(new CustomEvent('projects-updated', {bubbles: true, composed: true}));
@@ -331,13 +356,17 @@ export class AppShell extends LitElement {
         this.showMenu = false;
     }
 
+    private isSettingsPage(): boolean {
+        return this.router.link() === '/settings';
+    }
+
     render() {
         return html`
             <header class="top-header">
                 <span class="app-title">${msg('Writer20')}</span>
             </header>
             <div style="display: flex; flex: 1;">
-                ${this.currentScreen !== 'settings' ? html`
+                ${!this.isSettingsPage() ? html`
                     <nav class="nav-panel" @click=${this.closeMenu}>
                         <div class="nav-items"></div>
                         <div class="nav-bottom">
@@ -353,7 +382,7 @@ export class AppShell extends LitElement {
                                         <span class="material-icons">file_upload</span>
                                         ${msg('Import Project')}
                                     </button>
-                                    <button class="menu-item" @click=${() => this.navigateTo('settings')}>
+                                    <button class="menu-item" @click=${() => this.navigateTo('/settings')}>
                                         <span class="material-icons">settings</span>
                                         ${msg('Settings')}
                                     </button>
@@ -364,28 +393,7 @@ export class AppShell extends LitElement {
                 ` : ''}
 
                 <main class="content" @click=${this.closeMenu}>
-                    ${this.currentScreen === 'dashboard' ? html`
-                        <dashboard-screen
-                                @navigate-to-workflow=${(e: CustomEvent) => this.navigateTo('workflow', e.detail.projectId)}
-                        ></dashboard-screen>
-                    ` : ''}
-
-                    ${this.currentScreen === 'workflow' && this.currentProjectId ? html`
-                        <workflow-screen
-                                .projectId=${this.currentProjectId}
-                                @navigate-back=${this.goBack}
-                        ></workflow-screen>
-                    ` : ''}
-
-                    ${this.currentScreen === 'settings' ? html`
-                        <settings-screen
-                                .theme=${this.theme}
-                                .language=${this.language}
-                                @theme-change=${(e: CustomEvent) => this.handleThemeChange(e.detail.theme)}
-                                @language-change=${(e: CustomEvent) => this.handleLanguageChange(e.detail.language)}
-                                @navigate-back=${this.goBack}
-                        ></settings-screen>
-                    ` : ''}
+                    ${this.router.outlet()}
                 </main>
 
                 <project-exists-dialog
