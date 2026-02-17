@@ -9,6 +9,7 @@ import {ProjectController} from '../../controllers/project-controller';
 import '@lit-labs/virtualizer';
 import './project-card';
 import './project-info-dialog';
+import './create-project-dialog';
 import '../confirm-dialog';
 
 @customElement('dashboard-screen')
@@ -82,45 +83,6 @@ export class DashboardScreen extends LitElement {
                 padding: 48px;
                 color: var(--text-secondary);
             }
-
-            .form-group {
-                margin-bottom: 16px;
-            }
-
-            .form-label {
-                display: block;
-                font-size: 14px;
-                font-weight: 500;
-                margin-bottom: 8px;
-                color: var(--text-primary);
-            }
-
-            .form-input {
-                width: 100%;
-                padding: 10px 12px;
-                border: 1px solid var(--border);
-                border-radius: 4px;
-                background-color: var(--bg-primary);
-                color: var(--text-primary);
-                font-size: 14px;
-                box-sizing: border-box;
-            }
-
-            .form-input:focus {
-                outline: none;
-                border-color: var(--primary);
-            }
-
-            .form-textarea {
-                min-height: 80px;
-                resize: vertical;
-            }
-
-            .error-text {
-                color: var(--error);
-                font-size: 12px;
-                margin-top: 4px;
-            }
         `
     ];
 
@@ -135,9 +97,6 @@ export class DashboardScreen extends LitElement {
     @state() private confirmMessage = '';
     @state() private confirmVariant: 'primary' | 'danger' = 'primary';
     @state() private selectedProject: Project | null = null;
-    @state() private newLanguage = '';
-    @state() private newBook = '';
-    @state() private newType = 'ulb';
     @state() private error = '';
 
     async connectedCallback() {
@@ -157,51 +116,11 @@ export class DashboardScreen extends LitElement {
 
     private openCreateModal() {
         this.showCreateModal = true;
-        this.newLanguage = '';
-        this.newBook = '';
-        this.newType = 'ulb';
-        this.error = '';
     }
 
     private closeCreateModal() {
         this.showCreateModal = false;
         this.error = '';
-    }
-
-    private async createProject() {
-        // Validate language: lowercase, a-z0-9-, no spaces
-        const languageRegex = /^[a-z0-9-]+$/;
-        if (!this.newLanguage.trim() || !languageRegex.test(this.newLanguage)) {
-            this.error = msg('Language must be lowercase letters, numbers, or hyphens only');
-            return;
-        }
-
-        // Validate book: lowercase, a-z0-9, exactly 3 characters
-        const bookRegex = /^[a-z0-9]{3}$/;
-        if (!this.newBook.trim() || !bookRegex.test(this.newBook)) {
-            this.error = msg('Book must be exactly 3 lowercase letters or numbers');
-            return;
-        }
-
-        // Validate type: lowercase, a-z0-9, max 3 characters
-        const typeRegex = /^[a-z0-9]{1,3}$/;
-        if (!this.newType.trim() || !typeRegex.test(this.newType)) {
-            this.error = msg('Resource must be 1-3 lowercase letters or numbers');
-            return;
-        }
-
-        // Use the controller to create the project
-        const project = await this.projectsCtrl.createProject(
-            this.newLanguage.trim(),
-            this.newBook.trim(),
-            this.newType.trim()
-        );
-
-        if (project) {
-            this.closeCreateModal();
-        } else if (this.projectsCtrl.error) {
-            this.error = getLocalizedError(this.projectsCtrl.error) || msg('Database error occurred');
-        }
     }
 
     private openInfoModal(project: Project, event: Event) {
@@ -221,13 +140,18 @@ export class DashboardScreen extends LitElement {
         }));
     }
 
-    private async handleProjectExport(e: CustomEvent) {
-        const project = e.detail.project as Project;
-        if (!project) return;
+    private async handleCreateProject(e: CustomEvent) {
+        const { language, book, type } = e.detail;
 
-        const zipPath = await this.projectsCtrl.exportProject(project.id);
-        if (!zipPath && this.projectsCtrl.error) {
-            this.error = getLocalizedError(this.projectsCtrl.error);
+        // Dialog already validates, just call controller
+        const project = await this.projectsCtrl.createProject(language, book, type);
+
+        if (project) {
+            this.closeCreateModal();
+        } else if (this.projectsCtrl.error) {
+            // Show error - we could reopen dialog or show toast
+            // For now, just log it
+            console.error('Failed to create project:', this.projectsCtrl.error);
         }
     }
 
@@ -248,6 +172,16 @@ export class DashboardScreen extends LitElement {
             }
         };
         this.showConfirmDialog = true;
+    }
+
+    private async handleProjectExport(e: CustomEvent) {
+        const project = e.detail.project as Project;
+        if (!project) return;
+
+        const zipPath = await this.projectsCtrl.exportProject(project.id);
+        if (!zipPath && this.projectsCtrl.error) {
+            this.error = getLocalizedError(this.projectsCtrl.error);
+        }
     }
 
     private handleConfirmDialogConfirm() {
@@ -295,63 +229,12 @@ export class DashboardScreen extends LitElement {
                 </div>
             `}
 
-            ${this.showCreateModal ? html`
-                <div class="modal-overlay" @click=${this.closeCreateModal}>
-                    <div class="modal" @click=${(e: Event) => e.stopPropagation()}>
-                        <div class="modal-header">
-                            <h2 class="modal-title">${msg('Create Project')}</h2>
-                            <button class="modal-close" @click=${this.closeCreateModal}>
-                                <span class="material-icons">close</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <label class="form-label">${msg('Language')}</label>
-                                <input
-                                        type="text"
-                                        class="form-input"
-                                        .value=${this.newLanguage}
-                                        @input=${(e: Event) => this.newLanguage = (e.target as HTMLInputElement).value.toLowerCase()}
-                                        @keydown=${(e: KeyboardEvent) => e.key === 'Enter' && this.createProject()}
-                                />
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">${msg('Book')}</label>
-                                <input
-                                        type="text"
-                                        class="form-input"
-                                        maxlength="3"
-                                        .value=${this.newBook}
-                                        @input=${(e: Event) => this.newBook = (e.target as HTMLInputElement).value.toLowerCase()}
-                                        @keydown=${(e: KeyboardEvent) => e.key === 'Enter' && this.createProject()}
-                                />
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">${msg('Resource')}</label>
-                                <select
-                                        class="form-input"
-                                        .value=${this.newType}
-                                        @change=${(e: Event) => this.newType = (e.target as HTMLSelectElement).value}
-                                >
-                                    <option value="ulb">ULB</option>
-                                    <option value="udb">UDB</option>
-                                    <option value="reg">REG</option>
-                                </select>
-                            </div>
-                            ${this.error ? html`
-                                <div class="error-text">${this.error}</div>` : ''}
-                        </div>
-                        <div class="modal-footer">
-                            <button class="secondary" @click=${this.closeCreateModal}>
-                                ${msg('Cancel')}
-                            </button>
-                            <button class="primary" @click=${this.createProject}>
-                                ${msg('Create')}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ` : ''}
+            <create-project-dialog
+                .open=${this.showCreateModal}
+                @create-project=${this.handleCreateProject}
+                @create-cancel=${this.closeCreateModal}
+                @dialog-close=${this.closeCreateModal}
+            ></create-project-dialog>
 
             <project-info-dialog
                 .open=${this.showInfoModal && this.selectedProject}
