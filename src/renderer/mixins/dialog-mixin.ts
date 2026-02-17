@@ -201,6 +201,11 @@ export function DialogMixin<T extends Constructor<LitElement>>(superClass: T) {
 
         private _handleOverlayClick() {
             if (this.closeOnOverlayClick) {
+                // Dispatch event so parent can reset its state
+                this.dispatchEvent(new CustomEvent('dialog-close', {
+                    bubbles: true,
+                    composed: true
+                }));
                 this.close();
             }
         }

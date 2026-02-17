@@ -8,6 +8,7 @@ import {getLocalizedError} from '../../i18n/error-messages';
 import {ProjectController} from '../../controllers/project-controller';
 import '@lit-labs/virtualizer';
 import './project-card';
+import './project-info-dialog';
 
 @customElement('dashboard-screen')
 export class DashboardScreen extends LitElement {
@@ -119,36 +120,6 @@ export class DashboardScreen extends LitElement {
                 font-size: 12px;
                 margin-top: 4px;
             }
-
-            .info-row {
-                display: flex;
-                margin-bottom: 8px;
-            }
-
-            .info-label {
-                font-weight: 500;
-                margin-right: 8px;
-                color: var(--text-secondary);
-            }
-
-            .info-value {
-                color: var(--text-primary);
-            }
-
-            .delete-btn {
-                background-color: transparent;
-                border: 1px solid var(--error);
-                color: var(--error);
-                padding: 8px 16px;
-                border-radius: 4px;
-                cursor: pointer;
-                transition: all 200ms ease-in-out;
-            }
-
-            .delete-btn:hover {
-                background-color: var(--error);
-                color: white;
-            }
         `
     ];
 
@@ -242,6 +213,30 @@ export class DashboardScreen extends LitElement {
         this.dispatchEvent(new CustomEvent('navigate-to-workflow', {
             detail: {projectId: project.id}
         }));
+    }
+
+    private async handleProjectExport(e: CustomEvent) {
+        const project = e.detail.project as Project;
+        if (!project) return;
+
+        const zipPath = await this.projectsCtrl.exportProject(project.id);
+        if (!zipPath && this.projectsCtrl.error) {
+            this.error = getLocalizedError(this.projectsCtrl.error);
+        }
+    }
+
+    private async handleProjectDelete(e: CustomEvent) {
+        const project = e.detail.project as Project;
+        if (!project) return;
+
+        const projectName = project.name;
+        const confirmed = confirm(msg(str`Are you sure you want to delete "${projectName}"?`));
+        if (!confirmed) return;
+
+        const success = await this.projectsCtrl.deleteProject(project.id);
+        if (!success && this.projectsCtrl.error) {
+            this.error = getLocalizedError(this.projectsCtrl.error);
+        }
     }
 
     private async exportProject() {
@@ -361,40 +356,13 @@ export class DashboardScreen extends LitElement {
                 </div>
             ` : ''}
 
-            ${this.showInfoModal && this.selectedProject ? html`
-                <div class="modal-overlay" @click=${this.closeInfoModal}>
-                    <div class="modal" @click=${(e: Event) => e.stopPropagation()}>
-                        <div class="modal-header">
-                            <h2 class="modal-title">${msg('Project Info')}</h2>
-                            <button class="modal-close" @click=${this.closeInfoModal}>
-                                <span class="material-icons">close</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="info-row">
-                                <span class="info-label">${msg('Language')}:</span>
-                                <span class="info-value">${this.selectedProject.language}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">${msg('Book')}:</span>
-                                <span class="info-value">${this.selectedProject.book}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">${msg('Resource')}:</span>
-                                <span class="info-value">${this.selectedProject.type.toUpperCase()}</span>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="delete-btn" @click=${this.deleteProject}>
-                                ${msg('Delete')}
-                            </button>
-                            <button class="secondary" @click=${this.exportProject}>
-                                ${msg('Export Project')}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ` : ''}
+            <project-info-dialog
+                .open=${this.showInfoModal && this.selectedProject}
+                .project=${this.selectedProject}
+                @project-delete=${this.handleProjectDelete}
+                @project-export=${this.handleProjectExport}
+                @dialog-close=${() => this.closeInfoModal()}
+            ></project-info-dialog>
         `;
     }
 }
