@@ -24,6 +24,50 @@ export class AppShell extends LitElement {
                 min-height: 100vh;
             }
 
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(30px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOutLeft {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(-30px);
+                    opacity: 0;
+                }
+            }
+
+            @keyframes slideInLeft {
+                from {
+                    transform: translateX(-30px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(30px);
+                    opacity: 0;
+                }
+            }
+
             .top-header {
                 display: flex;
                 justify-content: space-between;
@@ -121,6 +165,14 @@ export class AppShell extends LitElement {
                 flex-direction: column;
             }
 
+            .content.slide-in-right {
+                animation: slideInRight 250ms ease-out forwards;
+            }
+
+            .content.slide-in-left {
+                animation: slideInLeft 250ms ease-out forwards;
+            }
+
             @media (max-width: 768px) {
                 .nav-panel {
                     width: 60px;
@@ -130,6 +182,7 @@ export class AppShell extends LitElement {
     ];
 
     @state() private currentScreen: Screen = 'dashboard';
+    @state() private previousScreen: Screen = 'dashboard';
     @state() private theme: Theme = 'system';
     @state() private language: Language = 'en';
     @state() private currentProjectId: number | null = null;
@@ -202,11 +255,32 @@ export class AppShell extends LitElement {
     }
 
     private navigateTo(screen: Screen, projectId?: number) {
+        this.previousScreen = this.currentScreen;
         this.currentScreen = screen;
         this.showMenu = false;
         if (screen === 'workflow' && projectId) {
             this.currentProjectId = projectId;
         }
+    }
+
+    private getScreenAnimationClass(): string {
+        // Workflow comes from dashboard (slide right)
+        if (this.currentScreen === 'workflow' && this.previousScreen === 'dashboard') {
+            return 'slide-in-right';
+        }
+        // Going back to dashboard from workflow
+        if (this.currentScreen === 'dashboard' && this.previousScreen === 'workflow') {
+            return 'slide-in-left';
+        }
+        // Settings comes from dashboard (slide right)
+        if (this.currentScreen === 'settings' && this.previousScreen === 'dashboard') {
+            return 'slide-in-right';
+        }
+        // Going back to dashboard from settings
+        if (this.currentScreen === 'dashboard' && this.previousScreen === 'settings') {
+            return 'slide-in-left';
+        }
+        return '';
     }
 
     private async importProject() {
@@ -346,7 +420,7 @@ export class AppShell extends LitElement {
                     </nav>
                 ` : ''}
 
-                <main class="content" @click=${this.closeMenu}>
+                <main class="content ${this.getScreenAnimationClass()}" @click=${this.closeMenu}>
                     ${this.currentScreen === 'dashboard' ? html`
                         <dashboard-screen
                                 @navigate-to-workflow=${(e: CustomEvent) => this.navigateTo('workflow', e.detail.projectId)}
