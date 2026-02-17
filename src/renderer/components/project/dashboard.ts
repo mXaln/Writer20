@@ -5,6 +5,7 @@ import {Project} from '../../types';
 import {baseStyles} from "../../styles/base";
 import {fontStyles} from "../../styles/fonts";
 import {getLocalizedError} from '../../i18n/error-messages';
+import {ProjectController} from '../../controllers/project-controller';
 import '@lit-labs/virtualizer';
 import './project-card';
 
@@ -151,7 +152,9 @@ export class DashboardScreen extends LitElement {
         `
     ];
 
-    @state() private projects: Project[] = [];
+    // Initialize the ProjectController
+    private projectsCtrl = new ProjectController(this);
+
     @state() private showCreateModal = false;
     @state() private showInfoModal = false;
     @state() private selectedProject: Project | null = null;
@@ -162,21 +165,17 @@ export class DashboardScreen extends LitElement {
 
     async connectedCallback() {
         super.connectedCallback();
-        await this.loadProjects();
-
-        // Listen for project updates (imports, etc.)
-        window.addEventListener('projects-updated', () => this.loadProjects());
+        // Projects are automatically loaded by the controller
+        await this.projectsCtrl.loadProjects();
     }
 
-    private async loadProjects() {
-        try {
-            const result = await window.electronAPI.listProjects();
-            if (result.success && result.data) {
-                this.projects = result.data;
-            }
-        } catch (error) {
-            console.error('Failed to load projects:', error);
-        }
+    // Use controller's loading and projects
+    private get projects() {
+        return this.projectsCtrl.projects;
+    }
+
+    private get loading() {
+        return this.projectsCtrl.loading;
     }
 
     private openCreateModal() {
@@ -214,22 +213,17 @@ export class DashboardScreen extends LitElement {
             return;
         }
 
-        try {
-            const result = await window.electronAPI.createProject(
-                this.newLanguage.trim(),
-                this.newBook.trim(),
-                this.newType.trim()
-            );
+        // Use the controller to create the project
+        const project = await this.projectsCtrl.createProject(
+            this.newLanguage.trim(),
+            this.newBook.trim(),
+            this.newType.trim()
+        );
 
-            if (result.success) {
-                await this.loadProjects();
-                this.closeCreateModal();
-            } else {
-                this.error = getLocalizedError(result.error) || msg('Database error occurred');
-            }
-        } catch (error) {
-            console.error('Failed to create project:', error);
-            this.error = msg('Database error occurred');
+        if (project) {
+            this.closeCreateModal();
+        } else if (this.projectsCtrl.error) {
+            this.error = getLocalizedError(this.projectsCtrl.error) || msg('Database error occurred');
         }
     }
 
@@ -253,16 +247,11 @@ export class DashboardScreen extends LitElement {
     private async exportProject() {
         if (!this.selectedProject) return;
 
-        try {
-            const result = await window.electronAPI.exportProject(this.selectedProject.id);
-            if (result.success && result.data) {
-                this.closeInfoModal();
-            } else if (result.error) {
-                this.error = getLocalizedError(result.error);
-            }
-        } catch (error) {
-            console.error('Failed to export project:', error);
-            this.error = msg('Failed to export project');
+        const zipPath = await this.projectsCtrl.exportProject(this.selectedProject.id);
+        if (zipPath) {
+            this.closeInfoModal();
+        } else if (this.projectsCtrl.error) {
+            this.error = getLocalizedError(this.projectsCtrl.error);
         }
     }
 
@@ -273,17 +262,12 @@ export class DashboardScreen extends LitElement {
         const confirmed = confirm(msg(str`Are you sure you want to delete "${projectName}"?`));
         if (!confirmed) return;
 
-        try {
-            const result = await window.electronAPI.deleteProject(this.selectedProject.id);
-            if (result.success) {
-                await this.loadProjects();
-                this.closeInfoModal();
-            } else if (result.error) {
-                this.error = getLocalizedError(result.error);
-            }
-        } catch (error) {
-            console.error('Failed to delete project:', error);
-            this.error = msg('Failed to delete project');
+        // Use the controller to delete the project
+        const success = await this.projectsCtrl.deleteProject(this.selectedProject.id);
+        if (success) {
+            this.closeInfoModal();
+        } else if (this.projectsCtrl.error) {
+            this.error = getLocalizedError(this.projectsCtrl.error);
         }
     }
 
@@ -296,7 +280,11 @@ export class DashboardScreen extends LitElement {
                 </button>
             </div>
 
-            ${this.projects.length === 0 ? html`
+            ${this.loading ? html`
+                <div class="empty-state">
+                    ${msg('Loading projects...')}
+                </div>
+            ` : this.projects.length === 0 ? html`
                 <div class="empty-state">
                     ${msg('No projects yet. Create your first project!')}
                 </div>

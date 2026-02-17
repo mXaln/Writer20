@@ -373,19 +373,17 @@ export class AppShell extends LitElement {
                     ` : ''}
                 </main>
 
-                ${this.showProjectExistsDialog && this.projectExistsResult ? html`
-                    <project-exists-dialog
-                            .existsResult=${this.projectExistsResult}
-                            @import-option=${this.handleImportOption}
-                    ></project-exists-dialog>
-                ` : ''}
+                <project-exists-dialog
+                        .open=${this.showProjectExistsDialog && this.projectExistsResult}
+                        .existsResult=${this.projectExistsResult}
+                        @import-option=${this.handleImportOption}
+                ></project-exists-dialog>
 
-                ${this.showMergeResultDialog && this.mergeResult ? html`
-                    <merge-result-dialog
-                            .mergeResult=${this.mergeResult}
-                            @merge-result-closed=${this.handleMergeResultClosed}
-                    ></merge-result-dialog>
-                ` : ''}
+                <merge-result-dialog
+                        .open=${this.showMergeResultDialog && this.mergeResult}
+                        .mergeResult=${this.mergeResult}
+                        @merge-result-closed=${this.handleMergeResultClosed}
+                ></merge-result-dialog>
         `;
     }
 }

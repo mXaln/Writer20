@@ -4,59 +4,18 @@ import {msg} from '@lit/localize';
 import {ProjectExistsResult} from '../types';
 import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
+import {DialogMixin, dialogStyles} from '../mixins/dialog-mixin';
 
 @customElement('project-exists-dialog')
-export class ProjectExistsDialog extends LitElement {
+export class ProjectExistsDialog extends DialogMixin(LitElement) {
     static styles = [
         baseStyles,
         fontStyles,
+        dialogStyles,
         css`
-            :host {
-                display: block;
-            }
-
-            .overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: rgba(0, 0, 0, 0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-            }
-
             .dialog {
-                background-color: var(--surface);
-                border-radius: 8px;
-                box-shadow: var(--shadow-elevated);
                 min-width: 400px;
                 max-width: 500px;
-                padding: 24px;
-            }
-
-            .dialog-header {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                margin-bottom: 16px;
-            }
-
-            .dialog-icon {
-                color: #ff9800;
-                font-size: 32px;
-            }
-
-            .dialog-title {
-                font-size: 20px;
-                font-weight: 600;
-                color: var(--text-primary);
-            }
-
-            .dialog-content {
-                margin-bottom: 24px;
             }
 
             .project-info {
@@ -76,60 +35,13 @@ export class ProjectExistsDialog extends LitElement {
                 font-size: 13px;
                 color: var(--text-secondary);
             }
-
-            .dialog-actions {
-                display: flex;
-                flex-direction: row;
-                justify-content: flex-end;
-                gap: 12px;
-            }
-
-            .btn {
-                padding: 10px 16px;
-                border-radius: 4px;
-                border: none;
-                cursor: pointer;
-                font-size: 14px;
-                font-weight: 500;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-                transition: all 200ms ease-in-out;
-                flex: 1;
-            }
-
-            .btn-overwrite {
-                background-color: #f44336;
-                color: white;
-            }
-
-            .btn-overwrite:hover {
-                background-color: #d32f2f;
-            }
-
-            .btn-merge {
-                background-color: var(--primary);
-                color: white;
-            }
-
-            .btn-merge:hover {
-                background-color: var(--primary-hover);
-            }
-
-            .btn-cancel {
-                background-color: var(--bg-secondary);
-                color: var(--text-primary);
-                border: 1px solid var(--border);
-            }
-
-            .btn-cancel:hover {
-                background-color: var(--border);
-            }
         `
     ];
 
     @property({type: Object}) existsResult!: ProjectExistsResult;
+
+    dialogMinWidth = '400px';
+    dialogMaxWidth = '500px';
 
     private handleOverwrite() {
         this.dispatchEvent(new CustomEvent('import-option', {
@@ -137,6 +49,7 @@ export class ProjectExistsDialog extends LitElement {
             bubbles: true,
             composed: true
         }));
+        this.close();
     }
 
     private handleMerge() {
@@ -145,6 +58,7 @@ export class ProjectExistsDialog extends LitElement {
             bubbles: true,
             composed: true
         }));
+        this.close();
     }
 
     private handleCancel() {
@@ -153,47 +67,44 @@ export class ProjectExistsDialog extends LitElement {
             bubbles: true,
             composed: true
         }));
+        this.close();
     }
 
     render() {
-        return html`
-            <div class="overlay">
-                <div class="dialog">
-                    <div class="dialog-header">
-                        <span class="material-icons dialog-icon">folder_open</span>
-                        <span class="dialog-title">${msg('Project Already Exists')}</span>
+        return this.renderOverlay(html`
+            <div class="dialog-header">
+                <span class="material-icons dialog-icon">folder_open</span>
+                <span class="dialog-title">${msg('Project Already Exists')}</span>
+            </div>
+            
+            <div class="dialog-content">
+                <div class="project-info">
+                    <div class="project-name">
+                        ${this.existsResult?.projectName || 'Unknown project'}
                     </div>
-                    
-                    <div class="dialog-content">
-                        <div class="project-info">
-                            <div class="project-name">
-                                ${this.existsResult?.projectName || 'Unknown project'}
-                            </div>
-                            <div class="project-note">
-                                ${msg('A project with this identifier already exists. What would you like to do?')}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="dialog-actions">
-                        <button class="btn btn-overwrite" @click=${this.handleOverwrite}>
-                            <span class="material-icons">file_download</span>
-                            ${msg('Overwrite')}
-                        </button>
-                        
-                        <button class="btn btn-merge" @click=${this.handleMerge}>
-                            <span class="material-icons">merge</span>
-                            ${msg('Merge')}
-                        </button>
-                        
-                        <button class="btn btn-cancel" @click=${this.handleCancel}>
-                            <span class="material-icons">close</span>
-                            ${msg('Cancel')}
-                        </button>
+                    <div class="project-note">
+                        ${msg('A project with this identifier already exists. What would you like to do?')}
                     </div>
                 </div>
             </div>
-        `;
+
+            <div class="dialog-actions">
+                <button class="btn btn-danger" @click=${this.handleOverwrite}>
+                    <span class="material-icons">file_download</span>
+                    ${msg('Overwrite')}
+                </button>
+                
+                <button class="btn btn-primary" @click=${this.handleMerge}>
+                    <span class="material-icons">merge</span>
+                    ${msg('Merge')}
+                </button>
+                
+                <button class="btn btn-secondary" @click=${this.handleCancel}>
+                    <span class="material-icons">close</span>
+                    ${msg('Cancel')}
+                </button>
+            </div>
+        `);
     }
 }
 
