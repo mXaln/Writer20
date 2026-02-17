@@ -17,6 +17,17 @@ type Constructor<T = object> = new (...args: any[]) => T;
  * ```
  */
 export const dialogStyles = css`
+    @keyframes dialogZoomIn {
+        from {
+            transform: scale(0.7);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
     .overlay {
         position: fixed;
         top: 0;
@@ -35,6 +46,7 @@ export const dialogStyles = css`
         border-radius: 8px;
         box-shadow: var(--shadow-elevated);
         padding: 24px;
+        animation: dialogZoomIn 200ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
 
     .dialog-header {
@@ -140,10 +152,6 @@ export function DialogMixin<T extends Constructor<LitElement>>(superClass: T) {
         @property({type: Boolean, reflect: true}) 
         open = false;
 
-        /** Internal state for animation */
-        @state() 
-        private _isVisible = false;
-
         /** Dialog backdrop opacity */
         @property({type: Number}) 
         backdropOpacity = 0.5;
@@ -164,21 +172,6 @@ export function DialogMixin<T extends Constructor<LitElement>>(superClass: T) {
         @property({type: Boolean}) 
         closeOnOverlayClick = true;
 
-        updated(changedProperties: PropertyValues) {
-            super.updated(changedProperties);
-            
-            if (changedProperties.has('open')) {
-                if (this.open) {
-                    // Delay to allow CSS transition
-                    requestAnimationFrame(() => {
-                        this._isVisible = true;
-                    });
-                } else {
-                    this._isVisible = false;
-                }
-            }
-        }
-
         /** 
          * Render the dialog overlay with content
          * Call this in your render() method
@@ -188,7 +181,7 @@ export function DialogMixin<T extends Constructor<LitElement>>(superClass: T) {
             
             return html`
                 <div 
-                    class="overlay ${this._isVisible ? 'visible' : ''}"
+                    class="overlay"
                     style="--dialog-backdrop-opacity: ${this.backdropOpacity}; --dialog-min-width: ${this.dialogMinWidth}; --dialog-max-width: ${this.dialogMaxWidth}; --dialog-padding: ${this.dialogPadding}"
                     @click=${this._handleOverlayClick}
                 >
