@@ -1,4 +1,4 @@
-import {LitElement, css, html, TemplateResult} from 'lit';
+import {css, html, LitElement, TemplateResult} from 'lit';
 import {state} from 'lit/decorators.js';
 import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";

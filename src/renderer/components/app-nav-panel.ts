@@ -1,9 +1,14 @@
 import {css, html, LitElement} from 'lit';
-import {customElement, state} from 'lit/decorators.js';
-import {msg} from '@lit/localize';
+import {customElement, property, state} from 'lit/decorators.js';
 import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
 import {controlStyles} from "../styles/control";
+
+export interface NavAction {
+    label: string;
+    icon: string;
+    event: string;
+}
 
 @customElement('app-nav-panel')
 export class AppNavPanel extends LitElement {
@@ -56,6 +61,10 @@ export class AppNavPanel extends LitElement {
             color: #FFFFFF;
         }
 
+        .menu-btn.hidden {
+            display: none;
+        }
+
         .dropdown-menu {
             position: absolute;
             bottom: 100%;
@@ -98,6 +107,8 @@ export class AppNavPanel extends LitElement {
     `
     ];
 
+    @property({type: Array}) actions: NavAction[] = [];
+
     @state() private showMenu = false;
 
     private toggleMenu() {
@@ -108,37 +119,35 @@ export class AppNavPanel extends LitElement {
         this.showMenu = false;
     }
 
-    private handleImportClick() {
-        this.dispatchEvent(new CustomEvent('nav-import-click', {bubbles: true, composed: true}));
-        this.showMenu = false;
-    }
-
-    private handleSettingsClick() {
-        this.dispatchEvent(new CustomEvent('nav-settings-click', {bubbles: true, composed: true}));
+    private handleActionClick(action: NavAction) {
+        this.dispatchEvent(new CustomEvent(action.event, {bubbles: true, composed: true}));
         this.showMenu = false;
     }
 
     render() {
+        const hasActions = this.actions && this.actions.length > 0;
+
         return html`
             <nav class="nav-panel" @click=${this.closeMenu}>
                 <div class="nav-items"></div>
                 <div class="nav-bottom">
-                    <button class="menu-btn" @click=${(e: Event) => {
-                        e.stopPropagation();
-                        this.toggleMenu();
-                    }}>
+                    <button 
+                        class="menu-btn ${hasActions ? '' : 'hidden'}" 
+                        @click=${(e: Event) => {
+                            e.stopPropagation();
+                            this.toggleMenu();
+                        }}
+                    >
                         <span class="material-icons">more_vert</span>
                     </button>
-                    ${this.showMenu ? html`
+                    ${this.showMenu && hasActions ? html`
                         <div class="dropdown-menu">
-                            <button class="menu-item" @click=${this.handleImportClick}>
-                                <span class="material-icons">file_upload</span>
-                                ${msg('Import Project')}
-                            </button>
-                            <button class="menu-item" @click=${this.handleSettingsClick}>
-                                <span class="material-icons">settings</span>
-                                ${msg('Settings')}
-                            </button>
+                            ${this.actions.map(action => html`
+                                <button class="menu-item" @click=${() => this.handleActionClick(action)}>
+                                    <span class="material-icons">${action.icon}</span>
+                                    ${action.label}
+                                </button>
+                            `)}
                         </div>
                     ` : ''}
                 </div>

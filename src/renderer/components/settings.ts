@@ -1,8 +1,8 @@
-import {html, css} from 'lit';
+import {css, html} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {localized, msg} from '@lit/localize';
 import {allLocales} from "../i18n/locale-codes";
-import {Theme, Language} from '../types';
+import {Language, Theme} from '../types';
 import {AppScreen} from './app-screen';
 
 

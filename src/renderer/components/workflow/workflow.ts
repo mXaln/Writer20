@@ -1,7 +1,7 @@
-import {html, css} from 'lit';
-import {customElement, state, property} from 'lit/decorators.js';
+import {css, html} from 'lit';
+import {customElement, property, state} from 'lit/decorators.js';
 import {msg, str} from '@lit/localize';
-import {Project, FileItem, FileConflict} from '../../types';
+import {FileConflict, FileItem, Project} from '../../types';
 import {getLocalizedError} from '../../i18n/error-messages';
 import {AppScreen} from '../app-screen';
 import './file-card';

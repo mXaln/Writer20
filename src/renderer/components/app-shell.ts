@@ -5,11 +5,13 @@ import {getEffectiveTheme, getThemeCSS} from '../styles/theme';
 import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
 import {localized, msg} from '@lit/localize';
-const {setLocale} = await import('../i18n/localization');
 import {ImportOption, Language, MergeResult, ProjectExistsResult, Theme} from '../types';
+import type {NavAction} from './app-nav-panel';
 import './dialogs/project-exists-dialog';
 import './dialogs/merge-result-dialog';
 import './app-nav-panel';
+
+const {setLocale} = await import('../i18n/localization');
 
 @customElement('app-shell')
 @localized()
@@ -268,28 +270,49 @@ export class AppShell extends LitElement {
         this.mergeResult = null;
     }
 
-    private isSettingsPage(): boolean {
-        return this.router.link() === '/settings';
+    private getCurrentRouteActions(): NavAction[] {
+        const currentPath = this.router.link();
+        
+        // Dashboard actions
+        if (currentPath === '/' || currentPath === '') {
+            return [
+                {label: msg('Import Project'), icon: 'file_upload', event: 'nav-import'},
+                {label: msg('Settings'), icon: 'settings', event: 'nav-settings'},
+            ];
+        }
+        
+        // Workflow actions
+        if (currentPath?.startsWith('/workflow')) {
+            return [
+                {label: msg('Settings'), icon: 'settings', event: 'nav-settings'},
+            ];
+        }
+        
+        return [];
     }
 
-    private handleNavImportClick() {
-        this.importProject();
+    private async handleNavImport() {
+        await this.importProject();
     }
 
-    private handleNavSettingsClick() {
-        this.navigateTo('/settings');
+    private async handleNavSettings() {
+        await this.navigateTo('/settings');
     }
 
     render() {
+        const actions = this.getCurrentRouteActions();
+        const showNav = actions.length > 0;
+
         return html`
             <header class="top-header">
                 <span class="app-title">${msg('Writer20')}</span>
             </header>
             <div style="display: flex; flex: 1;">
-                ${!this.isSettingsPage() ? html`
+                ${showNav ? html`
                     <app-nav-panel
-                        @nav-import-click=${this.handleNavImportClick}
-                        @nav-settings-click=${this.handleNavSettingsClick}
+                        .actions=${actions}
+                        @nav-import=${this.handleNavImport}
+                        @nav-settings=${this.handleNavSettings}
                     ></app-nav-panel>
                 ` : ''}
 

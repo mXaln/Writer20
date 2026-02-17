@@ -1,4 +1,4 @@
-import {html, css} from 'lit';
+import {css, html} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
 import {msg, str} from '@lit/localize';
 import {Project} from '../../types';
