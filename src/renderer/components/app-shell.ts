@@ -130,7 +130,7 @@ export class AppShell extends LitElement {
     ];
 
     @state() private currentScreen: Screen = 'dashboard';
-    @state() private previousScreen: Screen = 'dashboard';
+    @state() private navigationStack: Screen[] = []; // Stack of previous screens
     @state() private theme: Theme = 'system';
     @state() private language: Language = 'en';
     @state() private currentProjectId: number | null = null;
@@ -203,11 +203,26 @@ export class AppShell extends LitElement {
     }
 
     private navigateTo(screen: Screen, projectId?: number) {
-        this.previousScreen = this.currentScreen;
+        // Push current screen to stack before navigating
+        this.navigationStack = [...this.navigationStack, this.currentScreen];
         this.currentScreen = screen;
         this.showMenu = false;
         if (screen === 'workflow' && projectId) {
             this.currentProjectId = projectId;
+        }
+    }
+
+    private goBack() {
+        // Pop from stack to go back
+        if (this.navigationStack.length === 0) return;
+        
+        const target = this.navigationStack[this.navigationStack.length - 1];
+        this.navigationStack = this.navigationStack.slice(0, -1);
+        
+        this.currentScreen = target;
+        // Clear project ID if going back to dashboard
+        if (target === 'dashboard') {
+            this.currentProjectId = null;
         }
     }
 
@@ -358,9 +373,7 @@ export class AppShell extends LitElement {
                     ${this.currentScreen === 'workflow' && this.currentProjectId ? html`
                         <workflow-screen
                                 .projectId=${this.currentProjectId}
-                                @navigate-back=${() => {
-                                    this.navigateTo('dashboard');
-                                }}
+                                @navigate-back=${this.goBack}
                         ></workflow-screen>
                     ` : ''}
 
@@ -370,7 +383,7 @@ export class AppShell extends LitElement {
                                 .language=${this.language}
                                 @theme-change=${(e: CustomEvent) => this.handleThemeChange(e.detail.theme)}
                                 @language-change=${(e: CustomEvent) => this.handleLanguageChange(e.detail.language)}
-                                @navigate-back=${() => this.navigateTo('dashboard')}
+                                @navigate-back=${this.goBack}
                         ></settings-screen>
                     ` : ''}
                 </main>
