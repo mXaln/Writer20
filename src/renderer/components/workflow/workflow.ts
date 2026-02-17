@@ -118,6 +118,11 @@ export class WorkflowScreen extends AppScreen {
         `
     ] as any;
 
+    // Workflow enters from the right (forward navigation from dashboard)
+    protected override get screenAnimation(): 'slide-right' | 'slide-left' | 'fade' | 'slide-up' | 'slide-down' | 'none' {
+        return 'slide-right';
+    }
+
     @property({type: Number}) projectId!: number;
     @state() private project: Project | null = null;
     @state() private files: FileItem[] = [];

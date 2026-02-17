@@ -66,6 +66,11 @@ export class DashboardScreen extends AppScreen {
     // Initialize the ProjectController
     private projectsCtrl = new ProjectController(this);
 
+    // Dashboard is typically the destination when going back, so slide from left
+    protected override get screenAnimation(): 'slide-right' | 'slide-left' | 'fade' | 'slide-up' | 'slide-down' | 'none' {
+        return 'slide-left';
+    }
+
     @state() private showCreateModal = false;
     @state() private showInfoModal = false;
     @state() private showConfirmDialog = false;

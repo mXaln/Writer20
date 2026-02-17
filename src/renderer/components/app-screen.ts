@@ -1,4 +1,5 @@
 import {LitElement, css, html, TemplateResult} from 'lit';
+import {state} from 'lit/decorators.js';
 import {baseStyles} from "../styles/base";
 import {fontStyles} from "../styles/fonts";
 import {controlStyles} from "../styles/control";
@@ -11,6 +12,9 @@ import {controlStyles} from "../styles/control";
  * ```typescript
  * export class Dashboard extends AppScreen {
  *   static styles = [baseStyles, AppScreen.styles, css`...`];
+ *   
+ *   // Override to define animation direction
+ *   get screenAnimation() { return 'slide-left'; }
  *   
  *   render() {
  *     return html`...`;
@@ -84,30 +88,23 @@ export abstract class AppScreen extends LitElement {
             }
         }
 
-        .screen-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .animate-slide-right {
+        :host(.animate-slide-right) {
             animation: slideInRight 250ms ease-out forwards;
         }
 
-        .animate-slide-left {
+        :host(.animate-slide-left) {
             animation: slideInLeft 250ms ease-out forwards;
         }
 
-        .animate-fade-in {
+        :host(.animate-fade-in) {
             animation: fadeIn 200ms ease-out forwards;
         }
 
-        .animate-slide-up {
+        :host(.animate-slide-up) {
             animation: slideUp 250ms ease-out forwards;
         }
 
-        .animate-slide-down {
+        :host(.animate-slide-down) {
             animation: slideDown 250ms ease-out forwards;
         }
 
@@ -170,11 +167,8 @@ export abstract class AppScreen extends LitElement {
     `
     ];
 
-    /** Animation type for this screen */
-    animation: 'slide-right' | 'slide-left' | 'fade' | 'slide-up' | 'slide-down' | 'none' = 'none';
-
-    /** Whether screen is visible/active */
-    active = false;
+    /** Internal counter to force animation replay */
+    @state() private _animationKey = 0;
 
     /** Loading state */
     protected loading = false;
@@ -182,24 +176,57 @@ export abstract class AppScreen extends LitElement {
     /** Error message */
     protected error: string | null | '' = null;
 
-    /** 
-     * Get the animation class based on animation property
+    /**
+     * Override in subclass to define animation direction
+     * 'slide-right': entering from right (forward navigation)
+     * 'slide-left': entering from left (back navigation)  
+     * 'fade': default fade in
+     * 'none': no animation
+     * 'slide-up': slide up entry
+     * 'slide-down': slide down entry
      */
-    protected get animationClass(): string {
-        switch (this.animation) {
-            case 'slide-right':
-                return 'animate-slide-right';
-            case 'slide-left':
-                return 'animate-slide-left';
-            case 'fade':
-                return 'animate-fade-in';
-            case 'slide-up':
-                return 'animate-slide-up';
-            case 'slide-down':
-                return 'animate-slide-down';
-            default:
-                return '';
+    protected get screenAnimation(): 'slide-right' | 'slide-left' | 'fade' | 'slide-up' | 'slide-down' | 'none' {
+        return 'fade';
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+        // Apply animation class to host element when screen connects
+        this._applyAnimationClass();
+    }
+
+    updated(changedProperties: Map<string, unknown>) {
+        super.updated(changedProperties);
+        // Re-apply animation when component updates (e.g., navigation)
+        if (changedProperties.has('_animationKey')) {
+            this._applyAnimationClass();
         }
+    }
+
+    private _applyAnimationClass() {
+        // Remove all animation classes first
+        this.classList.remove(
+            'animate-slide-right',
+            'animate-slide-left', 
+            'animate-fade-in',
+            'animate-slide-up',
+            'animate-slide-down'
+        );
+        
+        // Add the appropriate animation class based on screenAnimation
+        if (this.screenAnimation && this.screenAnimation !== 'none') {
+            const className = `animate-${this.screenAnimation}`;
+            // Force reflow to restart animation
+            void this.offsetWidth;
+            this.classList.add(className);
+        }
+    }
+
+    /**
+     * Manually trigger animation replay (useful after significant state changes)
+     */
+    protected replayAnimation() {
+        this._animationKey++;
     }
 
     /**

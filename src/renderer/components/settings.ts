@@ -120,6 +120,11 @@ export class SettingsScreen extends AppScreen {
         `
     ] as any;
 
+    // Settings enters from the right (forward navigation from dashboard)
+    protected override get screenAnimation(): 'slide-right' | 'slide-left' | 'fade' | 'slide-up' | 'slide-down' | 'none' {
+        return 'slide-right';
+    }
+
     @property({type: String}) theme: Theme = 'system';
     @property({type: String}) language: Language = 'en';
 
