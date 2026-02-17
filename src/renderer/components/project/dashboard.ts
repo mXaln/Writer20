@@ -9,6 +9,7 @@ import {ProjectController} from '../../controllers/project-controller';
 import '@lit-labs/virtualizer';
 import './project-card';
 import './project-info-dialog';
+import '../confirm-dialog';
 
 @customElement('dashboard-screen')
 export class DashboardScreen extends LitElement {
@@ -128,6 +129,11 @@ export class DashboardScreen extends LitElement {
 
     @state() private showCreateModal = false;
     @state() private showInfoModal = false;
+    @state() private showConfirmDialog = false;
+    @state() private confirmAction: (() => void) | null = null;
+    @state() private confirmTitle = '';
+    @state() private confirmMessage = '';
+    @state() private confirmVariant: 'primary' | 'danger' = 'primary';
     @state() private selectedProject: Project | null = null;
     @state() private newLanguage = '';
     @state() private newBook = '';
@@ -229,41 +235,32 @@ export class DashboardScreen extends LitElement {
         const project = e.detail.project as Project;
         if (!project) return;
 
-        const projectName = project.name;
-        const confirmed = confirm(msg(str`Are you sure you want to delete "${projectName}"?`));
-        if (!confirmed) return;
-
-        const success = await this.projectsCtrl.deleteProject(project.id);
-        if (!success && this.projectsCtrl.error) {
-            this.error = getLocalizedError(this.projectsCtrl.error);
-        }
+        // Show confirm dialog instead of native confirm
+        this.confirmTitle = msg('Delete Project');
+        this.confirmMessage = msg(str`Are you sure you want to delete "${project.name}"?`);
+        this.confirmVariant = 'danger';
+        this.confirmAction = async () => {
+            const success = await this.projectsCtrl.deleteProject(project.id);
+            if (success) {
+                this.closeInfoModal();
+            } else if (this.projectsCtrl.error) {
+                this.error = getLocalizedError(this.projectsCtrl.error);
+            }
+        };
+        this.showConfirmDialog = true;
     }
 
-    private async exportProject() {
-        if (!this.selectedProject) return;
-
-        const zipPath = await this.projectsCtrl.exportProject(this.selectedProject.id);
-        if (zipPath) {
-            this.closeInfoModal();
-        } else if (this.projectsCtrl.error) {
-            this.error = getLocalizedError(this.projectsCtrl.error);
+    private handleConfirmDialogConfirm() {
+        if (this.confirmAction) {
+            this.confirmAction();
         }
+        this.showConfirmDialog = false;
+        this.confirmAction = null;
     }
 
-    private async deleteProject() {
-        if (!this.selectedProject) return;
-
-        const projectName = this.selectedProject.name;
-        const confirmed = confirm(msg(str`Are you sure you want to delete "${projectName}"?`));
-        if (!confirmed) return;
-
-        // Use the controller to delete the project
-        const success = await this.projectsCtrl.deleteProject(this.selectedProject.id);
-        if (success) {
-            this.closeInfoModal();
-        } else if (this.projectsCtrl.error) {
-            this.error = getLocalizedError(this.projectsCtrl.error);
-        }
+    private handleConfirmDialogCancel() {
+        this.showConfirmDialog = false;
+        this.confirmAction = null;
     }
 
     render() {
@@ -363,6 +360,18 @@ export class DashboardScreen extends LitElement {
                 @project-export=${this.handleProjectExport}
                 @dialog-close=${() => this.closeInfoModal()}
             ></project-info-dialog>
+
+            <confirm-dialog
+                .open=${this.showConfirmDialog}
+                .title=${this.confirmTitle}
+                .message=${this.confirmMessage}
+                .variant=${this.confirmVariant}
+                .confirmText=${msg('Delete')}
+                .cancelText=${msg('Cancel')}
+                @confirm=${this.handleConfirmDialogConfirm}
+                @cancel=${this.handleConfirmDialogCancel}
+                @dialog-close=${this.handleConfirmDialogCancel}
+            ></confirm-dialog>
         `;
     }
 }
