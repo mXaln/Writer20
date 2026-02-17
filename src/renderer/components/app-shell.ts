@@ -24,50 +24,6 @@ export class AppShell extends LitElement {
                 min-height: 100vh;
             }
 
-            @keyframes slideInRight {
-                from {
-                    transform: translateX(30px);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-
-            @keyframes slideOutLeft {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(-30px);
-                    opacity: 0;
-                }
-            }
-
-            @keyframes slideInLeft {
-                from {
-                    transform: translateX(-30px);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-
-            @keyframes slideOutRight {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(30px);
-                    opacity: 0;
-                }
-            }
-
             .top-header {
                 display: flex;
                 justify-content: space-between;

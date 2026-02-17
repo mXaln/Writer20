@@ -1,18 +1,16 @@
-import {LitElement, html, css} from 'lit';
+import {html, css} from 'lit';
 import {customElement, state, property} from 'lit/decorators.js';
 import {msg, str} from '@lit/localize';
 import {Project, FileItem, FileConflict} from '../../types';
-import { baseStyles } from "../../styles/base";
-import { fontStyles } from "../../styles/fonts";
 import {getLocalizedError} from '../../i18n/error-messages';
+import {AppScreen} from '../app-screen';
 import './file-card';
 import '@lit-labs/virtualizer';
 
 @customElement('workflow-screen')
-export class WorkflowScreen extends LitElement {
+export class WorkflowScreen extends AppScreen {
     static styles = [
-        baseStyles,
-        fontStyles,
+        AppScreen.styles,
         css`
             :host {
                 display: block;
@@ -218,7 +216,7 @@ export class WorkflowScreen extends LitElement {
     @property({type: Number}) projectId!: number;
     @state() private project: Project | null = null;
     @state() private files: FileItem[] = [];
-    @state() private loading = true;
+    @state() protected loading = true;
     @state() private error = '';
     @state() private editingFileId: string | null = null;
     @state() private fileContents: Map<string, string> = new Map();

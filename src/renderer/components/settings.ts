@@ -1,18 +1,16 @@
-import {LitElement, html, css} from 'lit';
+import {html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {localized, msg} from '@lit/localize';
 import {allLocales} from "../i18n/locale-codes";
 import {Theme, Language} from '../types';
-import {baseStyles} from "../styles/base";
-import {fontStyles} from "../styles/fonts";
+import {AppScreen} from './app-screen';
 
 
 @customElement('settings-screen')
 @localized()
-export class SettingsScreen extends LitElement {
+export class SettingsScreen extends AppScreen {
     static styles = [
-        baseStyles,
-        fontStyles,
+        AppScreen.styles,
         css`
             :host {
                 display: block;

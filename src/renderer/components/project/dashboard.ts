@@ -1,11 +1,10 @@
-import {LitElement, html, css} from 'lit';
+import {html, css} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
 import {msg, str} from '@lit/localize';
 import {Project} from '../../types';
-import {baseStyles} from "../../styles/base";
-import {fontStyles} from "../../styles/fonts";
 import {getLocalizedError} from '../../i18n/error-messages';
 import {ProjectController} from '../../controllers/project-controller';
+import {AppScreen} from '../app-screen';
 import '@lit-labs/virtualizer';
 import './project-card';
 import './project-info-dialog';
@@ -13,10 +12,9 @@ import './create-project-dialog';
 import '../confirm-dialog';
 
 @customElement('dashboard-screen')
-export class DashboardScreen extends LitElement {
+export class DashboardScreen extends AppScreen {
     static styles = [
-        baseStyles,
-        fontStyles,
+        AppScreen.styles,
         css`
             :host {
                 display: flex;
@@ -97,7 +95,7 @@ export class DashboardScreen extends LitElement {
     @state() private confirmMessage = '';
     @state() private confirmVariant: 'primary' | 'danger' = 'primary';
     @state() private selectedProject: Project | null = null;
-    @state() private error = '';
+    @state() protected error = '';
 
     async connectedCallback() {
         super.connectedCallback();
@@ -106,12 +104,12 @@ export class DashboardScreen extends LitElement {
     }
 
     // Use controller's loading and projects
-    private get projects() {
-        return this.projectsCtrl.projects;
+    private get isLoading() {
+        return this.projectsCtrl.loading;
     }
 
-    private get loading() {
-        return this.projectsCtrl.loading;
+    private get projects() {
+        return this.projectsCtrl.projects;
     }
 
     private openCreateModal() {
@@ -206,7 +204,7 @@ export class DashboardScreen extends LitElement {
                 </button>
             </div>
 
-            ${this.loading ? html`
+            ${this.isLoading ? html`
                 <div class="empty-state">
                     ${msg('Loading projects...')}
                 </div>
