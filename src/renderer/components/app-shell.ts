@@ -10,6 +10,7 @@ import type {NavAction} from './app-nav-panel';
 import './dialogs/project-exists-dialog';
 import './dialogs/merge-result-dialog';
 import './app-nav-panel';
+import {Routes} from './routes';
 
 const {setLocale} = await import('../i18n/localization');
 
@@ -54,15 +55,15 @@ export class AppShell extends LitElement {
 
     private router = new Router(this, [
         {
-            path: '/',
+            path: Routes.DASHBOARD,
             render: () => {
                 return html`<dashboard-screen 
-                        @navigate-to-workflow=${(e: CustomEvent) => this.navigateTo(`/workflow/${e.detail.projectId}`)}
+                        @navigate-to-workflow=${(e: CustomEvent) => this.navigateTo(Routes.getWorkflowPath(e.detail.projectId))}
                 ></dashboard-screen>`
             }
         },
         {
-            path: '/workflow/:projectId',
+            path: Routes.WORKFLOW,
             render: ({projectId}) => {
                 return html`<workflow-screen 
                         .projectId=${projectId}
@@ -71,7 +72,7 @@ export class AppShell extends LitElement {
             }
         },
         {
-            path: '/settings',
+            path: Routes.SETTINGS,
             render: () => {
                 return html`
                     <settings-screen
@@ -99,7 +100,7 @@ export class AppShell extends LitElement {
         this.applyTheme();
 
         // Navigate to initial route after settings are loaded
-        await this.router.goto('/');
+        await this.router.goto(Routes.DASHBOARD);
 
         // Listen for system theme changes
         if (window.matchMedia) {
@@ -194,11 +195,11 @@ export class AppShell extends LitElement {
         // Pop from stack to go back
         this.navigationStack.pop();
         if (this.navigationStack.length === 0) {
-            return await this.router.goto("/")
+            return await this.router.goto(Routes.DASHBOARD);
         }
 
         const target = this.navigationStack[this.navigationStack.length - 1];
-        if (!target) return await this.router.goto("/");
+        if (!target) return await this.router.goto(Routes.DASHBOARD);
 
         await this.router.goto(target);
     }
@@ -261,7 +262,7 @@ export class AppShell extends LitElement {
         
         if (hasConflicts && this.mergeResult) {
             // Navigate to workflow to resolve conflicts
-            await this.navigateTo(`/workflow/${this.mergeResult.projectId}`);
+            await this.navigateTo(Routes.getWorkflowPath(this.mergeResult.projectId));
         } else {
             // Just refresh dashboard
             this.dispatchEvent(new CustomEvent('projects-updated', {bubbles: true, composed: true}));
@@ -274,7 +275,7 @@ export class AppShell extends LitElement {
         const currentPath = this.router.link();
         
         // Dashboard actions
-        if (currentPath === '/' || currentPath === '') {
+        if (currentPath === Routes.DASHBOARD || currentPath === '') {
             return [
                 {label: msg('Import Project'), icon: 'file_upload', event: 'nav-import'},
                 {label: msg('Settings'), icon: 'settings', event: 'nav-settings'},
@@ -282,9 +283,9 @@ export class AppShell extends LitElement {
         }
         
         // Workflow actions
-        if (currentPath?.startsWith('/workflow')) {
+        if (currentPath?.startsWith(Routes.getBase(currentPath))) {
             return [
-                {label: msg('Settings'), icon: 'settings', event: 'nav-settings'},
+                {label: 'Settings', icon: 'settings', event: 'nav-settings'},
             ];
         }
         
@@ -296,7 +297,7 @@ export class AppShell extends LitElement {
     }
 
     private async handleNavSettings() {
-        await this.navigateTo('/settings');
+        await this.navigateTo(Routes.SETTINGS);
     }
 
     render() {
