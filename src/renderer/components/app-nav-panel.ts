@@ -111,13 +111,45 @@ export class AppNavPanel extends LitElement {
 
     @state() private showMenu = false;
 
-    private toggleMenu() {
-        this.showMenu = !this.showMenu;
+    connectedCallback() {
+        super.connectedCallback();
+        // Use capture phase to intercept before other handlers
+        document.addEventListener('click', this.handleClick, true);
     }
 
-    private closeMenu() {
-        this.showMenu = false;
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        document.removeEventListener('click', this.handleClick, true);
     }
+
+    private handleClick = (e: Event) => {
+        const path = e.composedPath();
+        
+        // Check if clicked on menu button or dropdown menu
+        const menuBtn = this.shadowRoot?.querySelector('.menu-btn');
+        const dropdownMenu = this.shadowRoot?.querySelector('.dropdown-menu');
+        
+        const clickedMenuBtn = path.includes(menuBtn as Node);
+        const clickedDropdown = path.includes(dropdownMenu as Node);
+        
+        if (clickedMenuBtn) {
+            // Toggle menu when clicking the menu button
+            this.showMenu = !this.showMenu;
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        
+        if (!this.showMenu) return;
+        
+        if (clickedDropdown) {
+            // Let the dropdown item's handler fire - don't prevent default
+            return;
+        }
+        
+        // Clicked elsewhere - close the menu
+        this.showMenu = false;
+    };
 
     private handleActionClick(action: NavAction) {
         this.dispatchEvent(new CustomEvent(action.event, {bubbles: true, composed: true}));
@@ -128,15 +160,11 @@ export class AppNavPanel extends LitElement {
         const hasActions = this.actions && this.actions.length > 0;
 
         return html`
-            <nav class="nav-panel" @click=${this.closeMenu}>
+            <nav class="nav-panel">
                 <div class="nav-items"></div>
                 <div class="nav-bottom">
                     <button 
                         class="menu-btn ${hasActions ? '' : 'hidden'}" 
-                        @click=${(e: Event) => {
-                            e.stopPropagation();
-                            this.toggleMenu();
-                        }}
                     >
                         <span class="material-icons">more_vert</span>
                     </button>
