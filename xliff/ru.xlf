@@ -26,18 +26,6 @@
   <source>Resource must be 1-3 lowercase letters or numbers</source>
   <target>Ресурс должен быть 1-3 строчные буквы или цифры</target>
 </trans-unit>
-<trans-unit id="s1c8e96983fde891d">
-  <source>Database error occurred</source>
-  <target>Произошла ошибка базы данных</target>
-</trans-unit>
-<trans-unit id="s2cb49b0a9f0009b4">
-  <source>Failed to export project</source>
-  <target>Не удалось экспортировать проект</target>
-</trans-unit>
-<trans-unit id="sc70c9a04b5f9e809">
-  <source>Failed to delete project</source>
-  <target>Не удалось удалить проект</target>
-</trans-unit>
 <trans-unit id="s199f5853f4e718f7">
   <source>Projects</source>
   <target>Проекты</target>
@@ -102,14 +90,6 @@
   <source>System</source>
   <target>Системная</target>
 </trans-unit>
-<trans-unit id="s4caed5b7a7e5d89b">
-  <source>English</source>
-  <target>Английский</target>
-</trans-unit>
-<trans-unit id="sa30c12014e955946">
-  <source>Russian</source>
-  <target>Русский</target>
-</trans-unit>
 <trans-unit id="s33f85f24c0f5f008">
   <source>Save</source>
   <target>Сохранить</target>
@@ -127,16 +107,8 @@
   <target>Назад</target>
 </trans-unit>
 <trans-unit id="sb1a4c9ac23d34cc5">
-  <source>Are you sure you want to delete "<x id="0" equiv-text="${projectName}"/>"?</source>
-  <target>Вы уверены, что хотите удалить "<x id="0" equiv-text="${projectName}"/>"</target>
-</trans-unit>
-<trans-unit id="sdef34fe08bb28b09">
-  <source>Chinese (Simplified)</source>
-  <target>Китайский (упрощённый)</target>
-</trans-unit>
-<trans-unit id="sff8c72928a9b6646">
-  <source>Spanish (Latin America)</source>
-  <target>Испанский (Латиноамериканский)</target>
+  <source>Are you sure you want to delete "<x id="0" equiv-text="${project.name}"/>"?</source>
+  <target>Вы уверены, что хотите удалить "<x id="0" equiv-text="${project.name}"/>"</target>
 </trans-unit>
 <trans-unit id="s1e13b5077e946068">
   <source>Merged with Conflicts</source>
@@ -225,6 +197,34 @@
 <trans-unit id="s4e4bf859a9914e0f">
   <source>Conflict</source>
   <target>Конфликт</target>
+</trans-unit>
+<trans-unit id="sc70c9a04b5f9e809">
+  <source>Failed to delete project</source>
+  <target>Не удалось удалить проект</target>
+</trans-unit>
+<trans-unit id="s2cb49b0a9f0009b4">
+  <source>Failed to export project</source>
+  <target>Не удалось экспортировать проект</target>
+</trans-unit>
+<trans-unit id="sb85774dc5d18ff0f">
+  <source>Confirm</source>
+  <target>Подтвердить</target>
+</trans-unit>
+<trans-unit id="s776b91aceac49fff">
+  <source>Delete Project</source>
+  <target>Удалить проект</target>
+</trans-unit>
+<trans-unit id="s1d7d58d0ca555963">
+  <source>Loading projects...</source>
+  <target>Загрузка проектов...</target>
+</trans-unit>
+<trans-unit id="s125813d2f3084797">
+  <source>Failed to load projects</source>
+  <target>Не удалось загрузить проекты</target>
+</trans-unit>
+<trans-unit id="s24ad9e18750870ae">
+  <source>Failed to create project</source>
+  <target>Не удалось создать проект</target>
 </trans-unit>
 </body>
 </file>

@@ -130,10 +130,10 @@ export class SettingsScreen extends AppScreen {
 
     private getLocaleNames(locale: string) {
         const locales: Record<string, string> = {
-            'en': msg('English'),
-            'es-419': msg('Spanish (Latin America)'),
-            'ru': msg('Russian'),
-            'zh-Hans': msg('Chinese (Simplified)'),
+            'en': 'English',
+            'es-419': 'Español (Latinoamérica)',
+            'ru': 'Русский',
+            'zh-Hans': '简体中文',
         };
         return locales[locale];
     }

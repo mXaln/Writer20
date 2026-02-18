@@ -1,6 +1,8 @@
 import {BrowserWindow, dialog, ipcMain} from 'electron';
 import log from 'electron-log';
 import * as Projects from '../business/projects';
+import {msg} from "@lit/localize";
+import {ErrorCode} from "../error-codes";
 
 export function setupProjectHandlers(): void {
   ipcMain.handle('project:create', async (_event, language: string, book: string, type: string) => {
@@ -22,16 +24,16 @@ export function setupProjectHandlers(): void {
   ipcMain.handle('project:export', async (_event, id: number) => {
     const projectResult = Projects.get(id);
     if (!projectResult.success || !projectResult.data) {
-      return { success: false, error: 'Project not found' };
+      return { success: false, error: ErrorCode.PROJECT_NOT_FOUND };
     }
 
     const project = projectResult.data;
     const win = BrowserWindow.fromWebContents(_event.sender);
 
     const result = await dialog.showSaveDialog(win!, {
-      title: 'Export Project as ZIP',
+      title: msg('Export Project as ZIP'),
       defaultPath: `${project.name}.zip`,
-      filters: [{ name: 'ZIP Files', extensions: ['zip'] }]
+      filters: [{ name: msg('ZIP Files'), extensions: ['zip'] }]
     });
 
     if (result.canceled || !result.filePath) {
@@ -45,8 +47,8 @@ export function setupProjectHandlers(): void {
     const win = BrowserWindow.fromWebContents(_event.sender);
 
     const result = await dialog.showOpenDialog(win!, {
-      title: 'Import Project from ZIP',
-      filters: [{ name: 'ZIP Files', extensions: ['zip'] }],
+      title: msg('Import Project from ZIP'),
+      filters: [{ name: msg('ZIP Files'), extensions: ['zip'] }],
       properties: ['openFile']
     });
 

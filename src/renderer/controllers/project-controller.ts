@@ -1,5 +1,7 @@
 import {ReactiveController, ReactiveControllerHost} from 'lit';
 import {Project} from '../types';
+import {ErrorCode} from "../../main/error-codes";
+import {msg} from "@lit/localize";
 
 /**
  * API response wrapper
@@ -89,11 +91,11 @@ export class ProjectController implements ReactiveController {
       if (result.success && result.data) {
         this.projects = result.data;
       } else {
-        this.error = result.error || 'Failed to load projects';
+        this.error = result.error || msg('Failed to load projects');
         this.projects = [];
       }
     } catch (err) {
-      this.error = err instanceof Error ? err.message : 'Unknown error';
+      this.error = err instanceof Error ? err.message : 'An unknown error occurred';
       this.projects = [];
     } finally {
       this.loading = false;
@@ -117,11 +119,11 @@ export class ProjectController implements ReactiveController {
       if (result.success && result.data) {
         this.selectedProject = result.data;
       } else {
-        this.error = result.error || 'Project not found';
+        this.error = result.error || ErrorCode.PROJECT_NOT_FOUND;
         this.selectedProject = null;
       }
     } catch (err) {
-      this.error = err instanceof Error ? err.message : 'Unknown error';
+      this.error = err instanceof Error ? err.message : ErrorCode.UNKNOWN;
       this.selectedProject = null;
     } finally {
       this.loading = false;
@@ -147,11 +149,11 @@ export class ProjectController implements ReactiveController {
         await this.loadProjects();
         return result.data;
       } else {
-        this.error = result.error || 'Failed to create project';
+        this.error = result.error || msg('Failed to create project');
         return null;
       }
     } catch (err) {
-      this.error = err instanceof Error ? err.message : 'Unknown error';
+      this.error = err instanceof Error ? err.message : 'An unknown error occurred';
       return null;
     } finally {
       this.loading = false;
@@ -179,11 +181,11 @@ export class ProjectController implements ReactiveController {
         }
         return true;
       } else {
-        this.error = result.error || 'Failed to delete project';
+        this.error = result.error || msg('Failed to delete project');
         return false;
       }
     } catch (err) {
-      this.error = err instanceof Error ? err.message : 'Unknown error';
+      this.error = err instanceof Error ? err.message : msg('An unknown error occurred');
       return false;
     } finally {
       this.loading = false;
@@ -205,11 +207,11 @@ export class ProjectController implements ReactiveController {
       if (result.success && result.data) {
         return result.data;
       } else {
-        this.error = result.error || 'Failed to export project';
+        this.error = result.error || msg('Failed to export project');
         return null;
       }
     } catch (err) {
-      this.error = err instanceof Error ? err.message : 'Unknown error';
+      this.error = err instanceof Error ? err.message : msg('An unknown error occurred');
       return null;
     } finally {
       this.loading = false;

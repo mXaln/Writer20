@@ -20,7 +20,9 @@
     "package:linux": "npm run build && electron-builder --linux --publish never",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "localize:extract": "lit-localize extract",
+    "localize:build": "lit-localize build"
   },
   "dependencies": {
     "@fontsource/material-icons": "^5.2.7",
